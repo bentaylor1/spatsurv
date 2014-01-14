@@ -1,0 +1,24 @@
+Package: spatsurv
+Type: Package
+Title: Bayesian spatial survival analysis with parametric proportional hazards
+    models.
+Version: 0.9
+Date: 2013-12-12
+Author: Benjamin M. Taylor and Barry S. Rowlingson
+Maintainer: Benjamin M. Taylor <b.taylor1@lancaster.ac.uk>
+Description: Survial analysis with parametric proportional hazards models where
+    the events have been goe-located.
+License: GPL-3
+Depends:
+    survival,
+    flexsurv,
+    sp,
+    tcltk
+Imports:
+    iterators,
+    RandomFields,
+    fields,
+    Matrix
+Suggests:
+    rgdal,
+    gpclib
