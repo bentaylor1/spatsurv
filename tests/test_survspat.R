@@ -2,7 +2,7 @@ library(spatsurv)
 
 par(mfrow=c(1,1))
 
-#set.seed(10)
+set.seed(10)
 
 n <- 100
 DIST <- "weibull"

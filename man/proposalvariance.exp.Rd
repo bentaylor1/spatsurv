@@ -5,28 +5,34 @@
 proposalvariance.exp(X, delta, tm, betahat, omegahat, Yhat, priors, covmodel, u)
 }
 \arguments{
-  \item{X}{X}
+  \item{X}{design matrix}
 
-  \item{delta}{X}
+  \item{delta}{censoring indicator}
 
-  \item{tm}{X}
+  \item{tm}{observed times}
 
-  \item{betahat}{X}
+  \item{betahat}{estimate of model parameter beta}
 
-  \item{omegahat}{X}
+  \item{omegahat}{estimate of model parameter omega}
 
-  \item{Yhat}{X}
+  \item{Yhat}{estimate of the latent field}
 
-  \item{priors}{X}
+  \item{priors}{the priors, an object of class
+  'mcmcPriors', see ?mcmcPriors}
 
-  \item{covmodel}{X}
+  \item{covmodel}{an object of class 'covmodel', see
+  ?covmodel}
 
-  \item{u}{X}
+  \item{u}{vector of distances between points}
 }
 \value{
-...
+estimates of eta, gamma and a proposal variance matrixc for
+use in the MALA algorithm
 }
 \description{
-A function to
+A function to compute an approximate proposal variance for
+the MALA algorithm for a parametric proportional hazards
+model with baseline hazard derived from the exponential
+distribution.
 }
 
