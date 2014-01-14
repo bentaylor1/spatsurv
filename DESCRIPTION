@@ -6,8 +6,8 @@ Version: 0.9
 Date: 2013-12-12
 Author: Benjamin M. Taylor and Barry S. Rowlingson
 Maintainer: Benjamin M. Taylor <b.taylor1@lancaster.ac.uk>
-Description: Survial analysis with parametric proportional hazards models where
-    the events have been goe-located.
+Description: Survival analysis with parametric proportional hazards models where
+    the events have been geo-located.
 License: GPL-3
 Depends:
     survival,

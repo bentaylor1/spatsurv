@@ -5,7 +5,7 @@ par(mfrow=c(1,1))
 set.seed(10)
 
 n <- 100
-DIST <- "weibull"
+DIST <- "exp"
 
 if(DIST=="exp"){
     THETA <- 1
@@ -54,7 +54,7 @@ spatdat$ss <- survdat
 if(TRUE){
     ss <- survspat( formula=ss~age+sex+cancer,
                     data=spatdat,
-                    dist="weibull",
+                    dist=DIST,
                     covmodel=covmodel(model="exponential",pars=NULL),
                     mcmc.control=mcmcpars(nits=100,burn=10,thin=9),
                     priors=priors)
