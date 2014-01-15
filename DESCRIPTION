@@ -18,6 +18,7 @@ Imports:
     iterators,
     RandomFields,
     fields,
+    rgl,
     Matrix
 Suggests:
     rgdal,

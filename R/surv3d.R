@@ -47,41 +47,42 @@ surv3d <- function(spp, ss,
     
     nr = nrow(spp)
     xy = rbind(coordinates(spp),coordinates(spp))
-    xyz = cbind(xy,c(rep(0,nr), d$surv[,"time"]))
+    xyz = cbind(xy,c(rep(0,nr), ss[,"time"]))
 
     # weave the lines
     xyz = xyz[rep(1:nr,rep(2,nr))+rep(c(0,nr),nr),]
 
     # segments3d takes pairs for line segments
-    segments3d(xyz,lwd=lwd, col=lcol, alpha=lalpha)
+    rgl::segments3d(xyz,lwd=lwd, col=lcol, alpha=lalpha)
 
     # add points for uncensored obs
     unc = ss[,"status"] == 1
-    xyp = cbind(coordinates(spp),d$surv[,"time"])
+    xyp = cbind(coordinates(spp),ss[,"time"])
+
     if(pstyle=="text"){
         psize=psize/12
-        text3d(xyp[unc,],texts=ptext[1],col=pcol[1], cex=psize[1], alpha=palpha)
-        text3d(xyp[!unc,],texts=ptext[2],col=pcol[2], cex=psize[2], alpha=palpha)
+        rgl::text3d(xyp[unc,,drop=FALSE],texts=ptext[1],col=pcol[1], cex=psize[1], alpha=palpha)
+        rgl::text3d(xyp[!unc,,drop=FALSE],texts=ptext[2],col=pcol[2], cex=psize[2], alpha=palpha)
     }
     if(pstyle=="point"){
-        points3d(xyp[unc,], size=psize[1], col=pcol[1], alpha=palpha)
-        points3d(xyp[!unc,], size=psize[2], col=pcol[2], alpha=palpha)
+        rgl::points3d(xyp[unc,,drop=FALSE], size=psize[1], col=pcol[1], alpha=palpha)
+        rgl::points3d(xyp[!unc,,drop=FALSE], size=psize[2], col=pcol[2], alpha=palpha)
     }
-    aspect3d(c(1,1,1))
-    title3d(main=title,xlab='x',ylab='y',zlab='Time')
-    axes3d()
+    rgl::aspect3d(c(1,1,1))
+    rgl::title3d(main=title,xlab='x',ylab='y',zlab='Time')
+    rgl::axes3d()
 
     ## minimum visible z coord (zero gets clipped)
-    zminvis = min(d$surv[,"time"])/100    
+    zminvis = min(ss[,"time"])/100    
 
     if (basegrid){
         x=seq(min(xyp[,1]),max(xyp[,1]),len=20)
         y=seq(min(xyp[,2]),max(xyp[,2]),len=20)
-        abclines3d(x,min(y),zminvis, a=0, b= 1, c=0, col="gray")
-        abclines3d(min(x),y,zminvis, a=1, b= 0, c=0, col="gray")
+        rgl::abclines3d(x,min(y),zminvis, a=0, b= 1, c=0, col="gray")
+        rgl::abclines3d(min(x),y,zminvis, a=1, b= 0, c=0, col="gray")
     }
     if(baseplane){
-        planes3d(0,0,1,-zminvis,col="gray",alpha=0.5)
+        rgl::planes3d(0,0,1,-zminvis,col="gray",alpha=0.5)
     }
     invisible(0)
 }
