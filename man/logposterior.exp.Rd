@@ -2,7 +2,8 @@
 \alias{logposterior.exp}
 \title{logposterior.exp function}
 \usage{
-logposterior.exp(tm, delta, X, beta, omega, eta, gamma, priors, covmodel, u)
+  logposterior.exp(tm, delta, X, beta, omega, eta, gamma,
+    priors, covmodel, u)
 }
 \arguments{
   \item{tm}{vector of observed times}
@@ -30,11 +31,11 @@ logposterior.exp(tm, delta, X, beta, omega, eta, gamma, priors, covmodel, u)
   \item{u}{distance matrix}
 }
 \value{
-the log posterior
+  the log posterior
 
-...
+  ...
 }
 \description{
-A function to evaluate the log-posterior
+  A function to evaluate the log-posterior
 }
 

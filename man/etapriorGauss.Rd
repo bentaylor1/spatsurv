@@ -2,7 +2,7 @@
 \alias{etapriorGauss}
 \title{etapriorGauss function}
 \usage{
-etapriorGauss(mean, sd)
+  etapriorGauss(mean, sd)
 }
 \arguments{
   \item{mean}{the prior mean, a vector of length 1 or more.
@@ -12,9 +12,9 @@ etapriorGauss(mean, sd)
   length 1 or more. 1 implies a common standard deviation.}
 }
 \value{
-an object of class "etapriorGauss"
+  an object of class "etapriorGauss"
 }
 \description{
-A function to define Gaussian priors for eta.
+  A function to define Gaussian priors for eta.
 }
 

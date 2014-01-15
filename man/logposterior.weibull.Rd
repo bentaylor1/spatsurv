@@ -2,7 +2,8 @@
 \alias{logposterior.weibull}
 \title{logposterior.weibull function}
 \usage{
-logposterior.weibull(tm, delta, X, beta, omega, eta, gamma, priors, covmodel, u)
+  logposterior.weibull(tm, delta, X, beta, omega, eta,
+    gamma, priors, covmodel, u)
 }
 \arguments{
   \item{tm}{vector of observed times}
@@ -30,11 +31,11 @@ logposterior.weibull(tm, delta, X, beta, omega, eta, gamma, priors, covmodel, u)
   \item{u}{distance matrix}
 }
 \value{
-the log posterior
+  the log posterior
 
-...
+  ...
 }
 \description{
-A function to evaluate the log-posterior
+  A function to evaluate the log-posterior
 }
 

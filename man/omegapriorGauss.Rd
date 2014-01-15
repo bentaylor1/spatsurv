@@ -2,7 +2,7 @@
 \alias{omegapriorGauss}
 \title{omegapriorGauss function}
 \usage{
-omegapriorGauss(mean, sd)
+  omegapriorGauss(mean, sd)
 }
 \arguments{
   \item{mean}{the prior mean, a vector of length 1 or more.
@@ -12,9 +12,9 @@ omegapriorGauss(mean, sd)
   length 1 or more. 1 implies a common standard deviation.}
 }
 \value{
-an object of class "omegapriorGauss"
+  an object of class "omegapriorGauss"
 }
 \description{
-A function to define Gaussian priors for omega.
+  A function to define Gaussian priors for omega.
 }
 

@@ -22,3 +22,18 @@ Imports:
 Suggests:
     rgdal,
     gpclib
+Collate:
+    'calibratemcmc.R'
+    'exponential.R'
+    'likelihoodsPosteriorsPriors.R'
+    'mcmcIterator.R'
+    'mcmcPriors.R'
+    'mcmcProgress.R'
+    'spatsurv.R'
+    'spatsurvMisc.R'
+    'surv3d.R'
+    'survexpon.R'
+    'survsim.R'
+    'survspat.R'
+    'txtProgressBar2.R'
+    'weibull.R'

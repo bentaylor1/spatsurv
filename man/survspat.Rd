@@ -2,7 +2,8 @@
 \alias{survspat}
 \title{survspat function}
 \usage{
-survspat(formula, data, dist, covmodel, mcmc.control, priors)
+  survspat(formula, data, dist, covmodel, mcmc.control,
+    priors)
 }
 \arguments{
   \item{formula}{see ?flexsurvreg}
@@ -21,11 +22,11 @@ survspat(formula, data, dist, covmodel, mcmc.control, priors)
   \item{priors}{an object of class Priors, see ?mcmcPriors}
 }
 \value{
-the mcmc output
+  the mcmc output
 }
 \description{
-A function to run a Bayesian analysis on right censored
-survial data assuming a proportional hazards model with
-baseline hazard derived from the exponential model.
+  A function to run a Bayesian analysis on right censored
+  survial data assuming a proportional hazards model with
+  baseline hazard derived from the exponential model.
 }
 

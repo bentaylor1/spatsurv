@@ -2,7 +2,8 @@
 \alias{derivlogindepGaussianprior}
 \title{derivlogindepGaussianprior function}
 \usage{
-derivlogindepGaussianprior(beta = NULL, omega = NULL, eta = NULL, priors)
+  derivlogindepGaussianprior(beta = NULL, omega = NULL,
+    eta = NULL, priors)
 }
 \arguments{
   \item{beta}{a vector, the parameter beta}
@@ -15,11 +16,11 @@ derivlogindepGaussianprior(beta = NULL, omega = NULL, eta = NULL, priors)
   ?mcmcPrior}
 }
 \value{
-...
+  ...
 }
 \description{
-A function to compute the first and second derivatives of
-the log-density assuming independent Gaussian priors for
-each of the parameters.
+  A function to compute the first and second derivatives of
+  the log-density assuming independent Gaussian priors for
+  each of the parameters.
 }
 

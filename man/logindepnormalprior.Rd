@@ -2,8 +2,8 @@
 \alias{logindepnormalprior}
 \title{logindepnormalprior function}
 \usage{
-logindepnormalprior(beta, omega, betapriormean, betapriorsd, omegapriormean,
-  omegapriorsd)
+  logindepnormalprior(beta, omega, betapriormean,
+    betapriorsd, omegapriormean, omegapriorsd)
 }
 \arguments{
   \item{beta}{parameter beta at which prior is to be
@@ -21,10 +21,10 @@ logindepnormalprior(beta, omega, betapriormean, betapriorsd, omegapriormean,
   \item{omegapriorsd}{prior standard deviation for omega}
 }
 \value{
-the log prior
+  the log prior
 }
 \description{
-A function to evaluate the log prior for independent
-normals
+  A function to evaluate the log prior for independent
+  normals
 }
 

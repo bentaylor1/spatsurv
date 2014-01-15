@@ -2,7 +2,7 @@
 \alias{getcov}
 \title{getcov function}
 \usage{
-getcov(u, sigma, phi, model, pars)
+  getcov(u, sigma, phi, model, pars)
 }
 \arguments{
   \item{u}{distance}
@@ -19,9 +19,9 @@ getcov(u, sigma, phi, model, pars)
   estimated}
 }
 \value{
-this is just a wrapper for CovarianceFct
+  this is just a wrapper for CovarianceFct
 }
 \description{
-getcov function
+  getcov function
 }
 

@@ -2,8 +2,9 @@
 \alias{logposterior_exponential_nospat}
 \title{logposterior_exponential_nospat function}
 \usage{
-logposterior_exponential_nospat(tm, delta, X, beta, omega, betapriormean,
-  betapriorsd, omegapriormean, omegapriorsd)
+  logposterior_exponential_nospat(tm, delta, X, beta,
+    omega, betapriormean, betapriorsd, omegapriormean,
+    omegapriorsd)
 }
 \arguments{
   \item{tm}{vector of observed times}
@@ -27,9 +28,9 @@ logposterior_exponential_nospat(tm, delta, X, beta, omega, betapriormean,
   \item{omegapriorsd}{prior standard deviation for omega}
 }
 \value{
-the log posterior
+  the log posterior
 }
 \description{
-A function to evaluate the log-posterior
+  A function to evaluate the log-posterior
 }
 

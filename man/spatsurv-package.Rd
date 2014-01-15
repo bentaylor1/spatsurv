@@ -1,29 +1,30 @@
-\docType{package}
+\docType{data}
 \name{spatsurv-package}
 \alias{spatsurv-package}
 \title{spatsurv}
-\format{\preformatted{ logi NA
-}}
+\format{logi NA}
 \usage{
-spatsurv
+  spatsurv
 }
 \description{
-An R package for spatially correlated parametric
-proportional hazards survial analysis.
+  An R package for spatially correlated parametric
+  proportional hazards survial analysis.
 }
 \details{
-\tabular{ll}{ Package: \tab spatsurv\cr Version: \tab
-0.9\cr Date: \tab 2014-08-01\cr License: \tab GPL-3 \cr }
+  \tabular{ll}{ Package: \tab spatsurv\cr Version: \tab
+  0.9\cr Date: \tab 2014-08-01\cr License: \tab GPL-3 \cr }
 
-section{Dependencies}{ Fill in here ... }
+  section{Dependencies}{ Fill in here ... }
 
-section{Citation}{ Fill in here ... }
+  section{Citation}{ Fill in here ... }
 
-references{ Fill in here ... }
+  references{ Fill in here ... }
 }
 \author{
-Benjamin Taylor, Health and Medicine, Lancaster University,
-Barry Rowlingson, Health and Medicine, Lancaster University
+  Benjamin Taylor, Health and Medicine, Lancaster
+  University, Barry Rowlingson, Health and Medicine,
+  Lancaster University
 }
+\keyword{datasets}
 \keyword{package}
 

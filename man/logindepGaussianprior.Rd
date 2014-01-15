@@ -2,7 +2,8 @@
 \alias{logindepGaussianprior}
 \title{logindepGaussianprior function}
 \usage{
-logindepGaussianprior(beta = NULL, omega = NULL, eta = NULL, priors)
+  logindepGaussianprior(beta = NULL, omega = NULL,
+    eta = NULL, priors)
 }
 \arguments{
   \item{beta}{parameter beta at which prior is to be
@@ -18,10 +19,10 @@ logindepGaussianprior(beta = NULL, omega = NULL, eta = NULL, priors)
   ?mcmcPriors}
 }
 \value{
-the log prior
+  the log prior
 }
 \description{
-A function to evaluate the log prior for independent
-normals
+  A function to evaluate the log prior for independent
+  normals
 }
 
