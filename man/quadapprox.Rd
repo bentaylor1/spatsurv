@@ -2,7 +2,7 @@
 \alias{quadapprox}
 \title{quadapprox function}
 \usage{
-quadapprox(fun, xseq, yseq, ...)
+  quadapprox(fun, xseq, yseq, ...)
 }
 \arguments{
   \item{fun}{a function}
@@ -16,13 +16,13 @@ quadapprox(fun, xseq, yseq, ...)
   \item{...}{other arguments to be passed to fun}
 }
 \value{
-a 2 by 2 matrix containing the curvature at the maximum and
-the (x,y) value at which the maximum occurs
+  a 2 by 2 matrix containing the curvature at the maximum
+  and the (x,y) value at which the maximum occurs
 }
 \description{
-A function to compute the second derivative of a function
-using a quadratic approximation to the function on a grid
-of points defined by xseq and yseq. Also returns the local
-maximum.
+  A function to compute the second derivative of a function
+  using a quadratic approximation to the function on a grid
+  of points defined by xseq and yseq. Also returns the
+  local maximum.
 }
 

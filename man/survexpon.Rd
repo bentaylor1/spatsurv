@@ -2,8 +2,8 @@
 \alias{survexpon}
 \title{survexpon function}
 \usage{
-survexpon(formula, data, mcmc.control, betapriormean = 0, betapriorsd,
-  omegapriormean = 0, omegapriorsd)
+  survexpon(formula, data, mcmc.control, betapriormean = 0,
+    betapriorsd, omegapriormean = 0, omegapriorsd)
 }
 \arguments{
   \item{formula}{see ?flexsurvreg}
@@ -22,11 +22,11 @@ survexpon(formula, data, mcmc.control, betapriormean = 0, betapriorsd,
   \item{omegapriorsd}{prior standard deviation for omega}
 }
 \value{
-the mcmc output
+  the mcmc output
 }
 \description{
-A function to run a Bayesian analysis on right censored
-survial data assuming a proportional hazards model with
-baseline hazard derived from the exponential model.
+  A function to run a Bayesian analysis on right censored
+  survial data assuming a proportional hazards model with
+  baseline hazard derived from the exponential model.
 }
 

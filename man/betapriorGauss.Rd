@@ -2,7 +2,7 @@
 \alias{betapriorGauss}
 \title{betapriorGauss function}
 \usage{
-betapriorGauss(mean, sd)
+  betapriorGauss(mean, sd)
 }
 \arguments{
   \item{mean}{the prior mean, a vector of length 1 or more.
@@ -12,9 +12,9 @@ betapriorGauss(mean, sd)
   length 1 or more. 1 implies a common standard deviation.}
 }
 \value{
-an object of class "betapriorGauss"
+  an object of class "betapriorGauss"
 }
 \description{
-A function to define Gaussian priors for beta.
+  A function to define Gaussian priors for beta.
 }
 

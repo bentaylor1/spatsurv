@@ -2,8 +2,8 @@
 \alias{proposalvariance.weibull}
 \title{proposalvariance.weibull function}
 \usage{
-proposalvariance.weibull(X, delta, tm, betahat, omegahat, Yhat, priors,
-  covmodel, u)
+  proposalvariance.weibull(X, delta, tm, betahat, omegahat,
+    Yhat, priors, covmodel, u)
 }
 \arguments{
   \item{X}{design matrix}
@@ -27,13 +27,13 @@ proposalvariance.weibull(X, delta, tm, betahat, omegahat, Yhat, priors,
   \item{u}{vector of distances between points}
 }
 \value{
-estimates of eta, gamma and a proposal variance matrixc for
-use in the MALA algorithm
+  estimates of eta, gamma and a proposal variance matrixc
+  for use in the MALA algorithm
 }
 \description{
-A function to compute an approximate proposal variance for
-the MALA algorithm for a parametric proportional hazards
-model with baseline hazard derived from the Weibull
-distribution.
+  A function to compute an approximate proposal variance
+  for the MALA algorithm for a parametric proportional
+  hazards model with baseline hazard derived from the
+  Weibull distribution.
 }
 

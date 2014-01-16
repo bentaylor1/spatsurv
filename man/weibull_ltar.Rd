@@ -2,7 +2,7 @@
 \alias{weibull_ltar}
 \title{weibull_ltar function}
 \usage{
-weibull_ltar(t, XbetaplusY, expXbetaplusY, theta)
+  weibull_ltar(t, XbetaplusY, expXbetaplusY, theta)
 }
 \arguments{
   \item{t}{vector of times}
@@ -18,11 +18,11 @@ weibull_ltar(t, XbetaplusY, expXbetaplusY, theta)
   parameters for the weibull model}
 }
 \value{
-the log-likelihood
+  the log-likelihood
 }
 \description{
-A function to evaluate the likelihood for the parametric
-proportional hazards model with baseline hazard derived
-from the weibull model.
+  A function to evaluate the likelihood for the parametric
+  proportional hazards model with baseline hazard derived
+  from the weibull model.
 }
 

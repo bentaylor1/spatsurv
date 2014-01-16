@@ -2,7 +2,7 @@
 \alias{covmodel}
 \title{covmodel function}
 \usage{
-covmodel(model, pars)
+  covmodel(model, pars)
 }
 \arguments{
   \item{model}{correlation type, see ?CovarianceFct}
@@ -13,10 +13,10 @@ covmodel(model, pars)
   estimated}
 }
 \value{
-an object of class covmodel
+  an object of class covmodel
 }
 \description{
-A function to define the spatial covariance model, see also
-?getcov and ?CovarianceFct
+  A function to define the spatial covariance model, see
+  also ?getcov and ?CovarianceFct
 }
 
