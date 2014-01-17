@@ -35,10 +35,6 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
         ninfo <- get.knnx(coords,coords,nn)
         u <- NULL
     }    
-    
-    
-    
-    browser()
                         
     ##########
     # This chunk of code borrowed from flexsurvreg    
@@ -98,7 +94,7 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
         stop("Unknown dist, must be one of 'exp', 'weibull', or 'gamma'")    
     }
     
-    Yhat <- do.call(paste("estimateY.",dist,sep=""),args=list(X=X,betahat=betahat,omegahat=omegahat,tm=tm,delta=delta,u=u,covmodel=covmodel))    
+    Yhat <- do.call(paste("estimateY.",dist,sep=""),args=list(X=X,betahat=betahat,omegahat=omegahat,tm=tm,delta=delta))    
         
     other <- do.call(paste("proposalvariance.",dist,sep=""),args=list(  X=X,
                                                                         delta=delta,
@@ -108,7 +104,9 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
                                                                         Yhat=Yhat,
                                                                         priors=priors,
                                                                         covmodel=covmodel,
-                                                                        u=u)) 
+                                                                        u=u,
+                                                                        sparse=sparse,
+                                                                        ninfo=ninfo)) 
     
     gammahat <- other$gammahat
     etahat <- other$etahat                                                                        

@@ -84,7 +84,7 @@ covmodel <- function(model,pars){
 ##' @return Plots the survival data non-censored observations appear as dots and censored observations as crosses. The size of the dot is proportional to the observed time.
 ##' @export
 
-plotsurv <- function(spp,ss,maxcex=1,eventpt=19,eventcol="red",censpt="+",censcol="black",xlim=NULL,ylim=NULL,...){
+plotsurv <- function(spp,ss,maxcex=1,background=NULL,eventpt=19,eventcol="red",censpt="+",censcol="black",xlim=NULL,ylim=NULL,...){
     crds <- coordinates(spp)
     if(is.null(xlim)){
         if(is.null(background)){

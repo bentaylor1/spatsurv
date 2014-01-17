@@ -11,11 +11,13 @@
 ##' @param Yhat estimate of the latent field  
 ##' @param priors the priors, an object of class 'mcmcPriors', see ?mcmcPriors
 ##' @param covmodel an object of class 'covmodel', see ?covmodel
-##' @param u vector of distances between points 
+##' @param u vector of distances between points
+##' @param sparse logical: whether to use a full, or a sparse representation of the covariance structure.
+##' @param ninfo neighbourhood information for constructing sparse matrix 
 ##' @return estimates of eta, gamma and a proposal variance matrixc for use in the MALA algorithm
 ##' @export
 
-proposalvariance.weibull <- function(X,delta,tm,betahat,omegahat,Yhat,priors,covmodel,u){
+proposalvariance.weibull <- function(X,delta,tm,betahat,omegahat,Yhat,priors,covmodel,u,sparse,ninfo){
     
     n <- length(tm)
     lenbeta <- length(betahat)
@@ -120,12 +122,10 @@ proposalvariance.weibull <- function(X,delta,tm,betahat,omegahat,Yhat,priors,cov
 ##' @param omegahat an estimate of omega
 ##' @param tm vector of observed times
 ##' @param delta censoring indicator
-##' @param u vecor of distances bettween points
-##' @param covmodel an object of class 'covmodel', see ?covmodel 
 ##' @return an estimate of the latent Gaussian field
 ##' @export
 
-estimateY.weibull <- function(X,betahat,omegahat,tm,delta,u,covmodel){
+estimateY.weibull <- function(X,betahat,omegahat,tm,delta){
 
     alpha <- exp(omegahat[1])
     lambda <- exp(omegahat[2])
