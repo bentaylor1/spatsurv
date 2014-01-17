@@ -65,6 +65,40 @@ covmodel <- function(model,pars){
 }
 
 
+##' plotsurv function
+##'
+##' A function to produce a 2-D plot of right censored spatial survival data.
+##'
+##' @param spp A spatial points data frame
+##' @param ss A Surv object (with right-censoring) 
+##' @param maxcex maximum size of dots default is equavalent to setting cex equal to 1
+##' @param eventpt The type of point to illustrate events, default is 19 (see ?pch) 
+##' @param eventcol the colour of events, default is black
+##' @param censpt The type of point to illustrate events, default is "+" (see ?pch)
+##' @param censcol the colour of censored observations, default is red
+##' @param xlim optional x-limits of plot, default is to choose this automatically 
+##' @param ylim optional y-limits of plot, default is to choose this automatically
+##' @param ... other arguments to pass to plot
+##' @return Plots the survival data non-censored observations appear as dots and censored observations as crosses. The size of the dot is proportional to the observed time.
+##' @export
+
+plotsurv <- function(spp,ss,maxcex=1,eventpt=19,eventcol="red",censpt="+",censcol="black",xlim=NULL,ylim=NULL,...){
+    crds <- coordinates(spp)
+    if(is.null(xlim)){
+        xlim <- range(crds[,1])
+    }
+    if(is.null(ylim)){
+        ylim <- range(crds[,2])
+    }
+
+    event <- ss[,"status"] == 1 # event indicator
+    cexx <- maxcex* ss[,"time"] / max(ss[,"time"])    
+    
+    plot(NULL,xlim=xlim,ylim=ylim,...)
+    points(crds[event,],pch=eventpt,col=eventcol,cex=cexx)
+    points(crds[!event,],pch=censpt,col=censcol,cex=cexx)
+    
+}
 
 #empvari <- function(coords,z,plot=TRUE,...){
 #    if(length(z)!=nrow(coords)){
