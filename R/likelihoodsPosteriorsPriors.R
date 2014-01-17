@@ -122,11 +122,13 @@ logposterior_exponential_nospat <- function(tm,delta,X,beta,omega,betapriormean,
 ##' @param priors the priors, an object of class mcmcPriors
 ##' @param covmodel an object of class covmodel, see ?covmodel
 ##' @param u distance matrix
+##' @param sparse logical: whether to use a full, or a sparse representation of the covariance structure.
+##' @param ninfo neighbourhood information for constructing sparse matrix
 ##' @return the log posterior
 ##' @return ...
 ##' @export
 
-logposterior.exp <- function(tm,delta,X,beta,omega,eta,gamma,priors,covmodel,u){
+logposterior.exp <- function(tm,delta,X,beta,omega,eta,gamma,priors,covmodel,u,sparse,ninfo){
 
     n <- nrow(X)
     Xbeta <- X%*%beta
@@ -180,11 +182,13 @@ logposterior.exp <- function(tm,delta,X,beta,omega,eta,gamma,priors,covmodel,u){
 ##' @param priors the priors, an object of class mcmcPriors
 ##' @param covmodel an object of class covmodel, see ?covmodel
 ##' @param u distance matrix
+##' @param sparse logical: whether to use a full, or a sparse representation of the covariance structure.
+##' @param ninfo neighbourhood information for constructing sparse matrix
 ##' @return the log posterior
 ##' @return ...
 ##' @export
 
-logposterior.weibull <- function(tm,delta,X,beta,omega,eta,gamma,priors,covmodel,u){
+logposterior.weibull <- function(tm,delta,X,beta,omega,eta,gamma,priors,covmodel,u,sparse,ninfo){
 
     alpha <- exp(omega[1])
     lambda <- exp(omega[2])

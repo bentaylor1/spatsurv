@@ -19,7 +19,8 @@ Imports:
     RandomFields,
     fields,
     rgl,
-    Matrix
+    Matrix,
+    FNN
 Suggests:
     rgdal,
     gpclib

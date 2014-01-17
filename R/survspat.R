@@ -9,11 +9,12 @@
 ##' @param covmodel an object of class covmodel, see ?covmodel
 ##' @param mcmc.control mcmc control parameters, see ?mcmcpars
 ##' @param priors an object of class Priors, see ?mcmcPriors
+##' @param nn If set to null (the default,) computations are performed with the full covariance matrix, if nn is set to a positive integer, this is the number of nearest neighbours to use in forming the sparse approximation to the covariance.
 ##' @return the mcmc output
 ##' @export
 
 
-survspat <- function(formula,data,dist,covmodel,mcmc.control,priors){
+survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
 
     start <- Sys.time()
 
@@ -22,8 +23,22 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors){
     }
     
     coords <- coordinates(data)
-    u <- as.vector(as.matrix(dist(coords)))
     data <- data@data
+    
+    if(is.null(nn)){
+        sparse <- FALSE        
+        ninfo <- NULL
+        u <- as.vector(as.matrix(dist(coords)))
+    }
+    else{
+        sparse <- TRUE        
+        ninfo <- get.knnx(coords,coords,nn)
+        u <- NULL
+    }    
+    
+    
+    
+    browser()
                         
     ##########
     # This chunk of code borrowed from flexsurvreg    
@@ -118,7 +133,19 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors){
     
     npars <- lenbeta + lenomega + leneta + lengamma
     
-    oldlogpost <- do.call(paste("logposterior.",dist,sep=""),args=list(tm=tm,delta=delta,X=X,beta=beta,omega=omega,eta=eta,gamma=gamma,priors=priors,covmodel=covmodel,u=u))
+    LOGPOST <- get(paste("logposterior.",dist,sep=""))
+    
+    oldlogpost <- LOGPOST(  tm=tm,
+                            delta=delta,
+                            X=X,beta=beta,
+                            omega=omega,
+                            eta=eta,
+                            gamma=gamma,
+                            priors=priors,
+                            covmodel=covmodel,
+                            u=u,
+                            sparse=sparse,
+                            ninfo=ninfo)
     
     betasamp <- c()
     omegasamp <- c()
@@ -133,16 +160,19 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors){
         propmean <- stuff + (h/2)*SIGMA%*%oldlogpost$grad
         newstuff <- propmean + h*cholSIGMA%*%rnorm(npars)
         
-        newlogpost <- do.call(paste("logposterior.",dist,sep=""),args=list( tm=tm,
-                                                                            delta=delta,
-                                                                            X=X,
-                                                                            beta=newstuff[1:lenbeta],
-                                                                            omega=newstuff[(lenbeta+1):(lenbeta+lenomega)],
-                                                                            eta=newstuff[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)],
-                                                                            gamma=newstuff[(lenbeta+lenomega+leneta+1):npars],
-                                                                            priors=priors,
-                                                                            covmodel=covmodel,
-                                                                            u=u))
+        newlogpost <- LOGPOST(  tm=tm,
+                                delta=delta,
+                                X=X,
+                                beta=newstuff[1:lenbeta],
+                                omega=newstuff[(lenbeta+1):(lenbeta+lenomega)],
+                                eta=newstuff[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)],
+                                gamma=newstuff[(lenbeta+lenomega+leneta+1):npars],
+                                priors=priors,
+                                covmodel=covmodel,
+                                u=u,
+                                sparse=sparse,
+                                ninfo=ninfo)
+                                
         revmean <- newstuff +  (h/2)*SIGMA%*%newlogpost$grad      
         
         revdiff <- as.matrix(stuff-revmean)
