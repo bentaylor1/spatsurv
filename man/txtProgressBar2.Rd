@@ -2,9 +2,8 @@
 \alias{txtProgressBar2}
 \title{A text progress bar with label}
 \usage{
-  txtProgressBar2(min = 0, max = 1, initial = 0,
-    char = "=", width = NA, title = "", label = "",
-    style = 1)
+txtProgressBar2(min = 0, max = 1, initial = 0, char = "=", width = NA,
+  title = "", label = "", style = 1)
 }
 \arguments{
   \item{min}{min value for bar}
@@ -25,8 +24,8 @@
   \item{style}{bar style}
 }
 \description{
-  This is the base txtProgressBar but with a little
-  modification to implement the label parameter for
-  style=3. For full info see txtProgressBar
+This is the base txtProgressBar but with a little
+modification to implement the label parameter for style=3.
+For full info see txtProgressBar
 }
 

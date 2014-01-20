@@ -101,8 +101,8 @@ plotsurv <- function(spp,ss,maxcex=1,background=NULL,eventpt=19,eventcol="red",c
     cexx <- maxcex* ss[,"time"] / max(ss[,"time"])    
     
     plot(background,xlim=xlim,ylim=ylim,...)
-    points(crds[event,],pch=eventpt,col=eventcol,cex=cexx)
-    points(crds[!event,],pch=censpt,col=censcol,cex=cexx)
+    points(crds[event,],pch=eventpt,col=eventcol,cex=cexx[event])
+    points(crds[!event,],pch=censpt,col=censcol,cex=cexx[!event])
     
 }
 

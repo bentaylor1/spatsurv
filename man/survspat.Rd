@@ -2,8 +2,7 @@
 \alias{survspat}
 \title{survspat function}
 \usage{
-  survspat(formula, data, dist, covmodel, mcmc.control,
-    priors)
+survspat(formula, data, dist, covmodel, mcmc.control, priors, nn = NULL)
 }
 \arguments{
   \item{formula}{see ?flexsurvreg}
@@ -20,13 +19,19 @@
   ?mcmcpars}
 
   \item{priors}{an object of class Priors, see ?mcmcPriors}
+
+  \item{nn}{If set to null (the default,) computations are
+  performed with the full covariance matrix, if nn is set
+  to a positive integer, this is the number of nearest
+  neighbours to use in forming the sparse approximation to
+  the covariance.}
 }
 \value{
-  the mcmc output
+the mcmc output
 }
 \description{
-  A function to run a Bayesian analysis on right censored
-  survial data assuming a proportional hazards model with
-  baseline hazard derived from the exponential model.
+A function to run a Bayesian analysis on right censored
+survial data assuming a proportional hazards model with
+baseline hazard derived from the exponential model.
 }
 

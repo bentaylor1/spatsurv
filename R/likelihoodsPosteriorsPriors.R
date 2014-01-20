@@ -159,8 +159,6 @@ logposterior.exp <- function(tm,delta,X,beta,omega,eta,gamma,priors,covmodel,u,s
         grad[length(beta)+length(omega)+length(eta)+i] <- grad[length(beta)+length(omega)+length(eta)+i] + sum(cholsigma[,i]*stuff2)
     }   
     
-    #browser()
-    
     grad <- grad + deriv
 
     return(list(logpost=logpost,grad=grad,Y=Y))

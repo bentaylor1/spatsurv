@@ -72,7 +72,7 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
     # End of borrowed code    
     ##########                    
                         
-                        
+    TRIGGER <- FALSE                    
                         
     mcmcloop <- mcmcLoop(N=mcmc.control$nits,burnin=mcmc.control$burn,thin=mcmc.control$thin,progressor=mcmcProgressTextBar)                            
                         
@@ -120,7 +120,10 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
     beta <- betahat
     omega <- omegahat
     eta <- etahat 
-    gamma <- gammahat   
+    gamma <- gammahat
+    
+    gamma[gamma > 6] <- 8 # threshold estimated gamma.
+    gamma[gamma < -6] <- -8 # threshold estimated gamma.  
         
     lenbeta <- length(beta)
     lenomega <- length(omega)
@@ -132,6 +135,8 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
     npars <- lenbeta + lenomega + leneta + lengamma
     
     LOGPOST <- get(paste("logposterior.",dist,sep=""))
+    
+    TRIGGER <- TRUE
     
     oldlogpost <- LOGPOST(  tm=tm,
                             delta=delta,

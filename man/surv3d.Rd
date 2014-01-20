@@ -2,11 +2,10 @@
 \alias{surv3d}
 \title{Spatial Survival Plot in 3D}
 \usage{
-  surv3d(spp, ss, lwd = 2, lcol = "black", lalpha = 1,
-    pstyle = c("point", "text"), psize = c(20, 10),
-    pcol = c("red", "black"), ptext = c("X", ""),
-    palpha = 1, title = "Spatial Survival",
-    basegrid = TRUE, baseplane = TRUE)
+surv3d(spp, ss, lwd = 2, lcol = "black", lalpha = 1, pstyle = c("point",
+  "text"), psize = c(20, 10), pcol = c("red", "black"), ptext = c("X",
+  ""), palpha = 1, title = "Spatial Survival", basegrid = TRUE,
+  baseplane = TRUE)
 }
 \arguments{
   \item{spp}{A spatial points data frame}
@@ -39,13 +38,13 @@
   \item{baseplane}{add a plane at t=0}
 }
 \value{
-  nothing
+nothing
 }
 \description{
-  Do a 3d plot of spatial survival data
+Do a 3d plot of spatial survival data
 }
 \details{
-  Uses rgl graphics to make a spinny zoomy plot
+Uses rgl graphics to make a spinny zoomy plot
 }
 \examples{
 \dontrun{
@@ -64,6 +63,6 @@ clear3d();surv3d(d,d$surv,baseplane=TRUE,basegrid=TRUE,pstyle="t",lalpha=0.5,lwd
 }
 }
 \author{
-  Barry S Rowlingson
+Barry S Rowlingson
 }
 

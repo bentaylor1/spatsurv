@@ -2,7 +2,7 @@ Package: spatsurv
 Type: Package
 Title: Bayesian spatial survival analysis with parametric proportional hazards
     models.
-Version: 0.9
+Version: 0.9-1
 Date: 2013-12-12
 Author: Benjamin M. Taylor and Barry S. Rowlingson
 Maintainer: Benjamin M. Taylor <b.taylor1@lancaster.ac.uk>
@@ -24,18 +24,3 @@ Imports:
 Suggests:
     rgdal,
     gpclib
-Collate:
-    'calibratemcmc.R'
-    'exponential.R'
-    'likelihoodsPosteriorsPriors.R'
-    'mcmcIterator.R'
-    'mcmcPriors.R'
-    'mcmcProgress.R'
-    'spatsurv.R'
-    'spatsurvMisc.R'
-    'surv3d.R'
-    'survexpon.R'
-    'survsim.R'
-    'survspat.R'
-    'txtProgressBar2.R'
-    'weibull.R'

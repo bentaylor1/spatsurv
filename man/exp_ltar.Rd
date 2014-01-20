@@ -2,7 +2,7 @@
 \alias{exp_ltar}
 \title{exp_ltar function}
 \usage{
-  exp_ltar(t, XbetaplusY, expXbetaplusY, theta)
+exp_ltar(t, XbetaplusY, expXbetaplusY, theta)
 }
 \arguments{
   \item{t}{vector of times}
@@ -17,11 +17,11 @@
   \item{theta}{rate parameter for exponential model}
 }
 \value{
-  the log-likelihood
+the log-likelihood
 }
 \description{
-  A function to evaluate the likelihood for the parametric
-  proportional hazards model with baseline hazard derived
-  from the exponential model.
+A function to evaluate the likelihood for the parametric
+proportional hazards model with baseline hazard derived
+from the exponential model.
 }
 

@@ -2,8 +2,7 @@
 \alias{mcmcLoop}
 \title{iterator for MCMC loops}
 \usage{
-  mcmcLoop(N, burnin, thin, trim = TRUE,
-    progressor = mcmcProgressPrint)
+mcmcLoop(N, burnin, thin, trim = TRUE, progressor = mcmcProgressPrint)
 }
 \arguments{
   \item{N}{number of iterations}
@@ -19,6 +18,6 @@
   object}
 }
 \description{
-  control an MCMC loop with this iterator
+control an MCMC loop with this iterator
 }
 

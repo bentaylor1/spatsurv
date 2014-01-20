@@ -2,8 +2,8 @@
 \alias{mcmcPriors}
 \title{mcmcPriors function}
 \usage{
-  mcmcPriors(betaprior = NULL, omegaprior = NULL,
-    etaprior = NULL, call = NULL, derivative = NULL)
+mcmcPriors(betaprior = NULL, omegaprior = NULL, etaprior = NULL,
+  call = NULL, derivative = NULL)
 }
 \arguments{
   \item{betaprior}{prior for beta, the covariate effects}
@@ -21,12 +21,12 @@
   second derivatives of the prior}
 }
 \value{
-  an onject of class mcmcPriors
+an onject of class mcmcPriors
 }
 \description{
-  A function to define priors for mcmc
+A function to define priors for mcmc
 }
 \seealso{
-  \link{survspat},
+\link{survspat},
 }
 

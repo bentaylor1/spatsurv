@@ -2,8 +2,7 @@
 \alias{mcmcpars}
 \title{mcmcpars function}
 \usage{
-  mcmcpars(nits, burn, thin, inits = NULL,
-    adaptivescheme = NULL)
+mcmcpars(nits, burn, thin, inits = NULL, adaptivescheme = NULL)
 }
 \arguments{
   \item{nits}{numer of iterations,}
@@ -21,9 +20,9 @@
   (adaptive MCMC of Andrieu and Thoms (2008))}
 }
 \value{
-  mcmc parameters
+mcmc parameters
 }
 \description{
-  A function for setting MCMC options.
+A function for setting MCMC options.
 }
 

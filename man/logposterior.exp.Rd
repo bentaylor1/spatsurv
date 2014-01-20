@@ -2,8 +2,8 @@
 \alias{logposterior.exp}
 \title{logposterior.exp function}
 \usage{
-  logposterior.exp(tm, delta, X, beta, omega, eta, gamma,
-    priors, covmodel, u)
+logposterior.exp(tm, delta, X, beta, omega, eta, gamma, priors, covmodel, u,
+  sparse, ninfo)
 }
 \arguments{
   \item{tm}{vector of observed times}
@@ -29,13 +29,19 @@
   ?covmodel}
 
   \item{u}{distance matrix}
+
+  \item{sparse}{logical: whether to use a full, or a sparse
+  representation of the covariance structure.}
+
+  \item{ninfo}{neighbourhood information for constructing
+  sparse matrix}
 }
 \value{
-  the log posterior
+the log posterior
 
-  ...
+...
 }
 \description{
-  A function to evaluate the log-posterior
+A function to evaluate the log-posterior
 }
 

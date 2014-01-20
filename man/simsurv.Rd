@@ -2,14 +2,12 @@
 \alias{simsurv}
 \title{simsurv function}
 \usage{
-  simsurv(X = cbind(age = runif(100, 5, 50), sex = rbinom(100, 1, 0.5), cancer = rbinom(100, 1, 0.2)),
-    beta = matrix(c(0.0296, 0.0261, 0.035), 3, 1),
-    theta = 1, dist = "exp",
-    coords = matrix(runif(2 * nrow(X)), nrow(X), 2),
-    sigmaphi = c(1, 0.1),
-    cov.model = covmodel(model = "exponential", pars = NULL),
-    mcmc.control = mcmcpars(nits = 1e+05, burn = 10000, thin = 90),
-    savechains = TRUE)
+simsurv(X = cbind(age = runif(100, 5, 50), sex = rbinom(100, 1, 0.5), cancer =
+  rbinom(100, 1, 0.2)), beta = matrix(c(0.0296, 0.0261, 0.035), 3, 1),
+  theta = 1, dist = "exp", coords = matrix(runif(2 * nrow(X)), nrow(X),
+  2), sigmaphi = c(1, 0.1), cov.model = covmodel(model = "exponential", pars
+  = NULL), mcmc.control = mcmcpars(nits = 1e+05, burn = 10000, thin = 90),
+  savechains = TRUE)
 }
 \arguments{
   \item{X}{a matrix of covariate information}
@@ -40,18 +38,18 @@
   convergence/mixing diagnostics}
 }
 \value{
-  simulated survival times from the exponential model (the
-  last simulated value from the MCMC chains)
+simulated survival times from the exponential model (the
+last simulated value from the MCMC chains)
 }
 \description{
-  A function to simulate spatial parametric proportional
-  hazards model with baseline hazard derived from the
-  exponential or weibull model. The function works by
-  simulating candidate survival times using MCMC in
-  parallel for each individual based on each individual's
-  covariates and the common parameter effects, beta.
+A function to simulate spatial parametric proportional
+hazards model with baseline hazard derived from the
+exponential or weibull model. The function works by
+simulating candidate survival times using MCMC in parallel
+for each individual based on each individual's covariates
+and the common parameter effects, beta.
 }
 \seealso{
-  \link{covmodel}, \link{survspat}
+\link{covmodel}, \link{survspat}
 }
 

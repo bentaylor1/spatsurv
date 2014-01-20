@@ -2,12 +2,12 @@
 \alias{nextStep}
 \title{next step of an MCMC chain}
 \usage{
-  nextStep(object)
+nextStep(object)
 }
 \arguments{
   \item{object}{an mcmc loop object}
 }
 \description{
-  just a wrapper for nextElem really.
+just a wrapper for nextElem really.
 }
 
