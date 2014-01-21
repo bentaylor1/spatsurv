@@ -31,6 +31,7 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
         u <- as.vector(as.matrix(dist(coords)))
     }
     else{
+        stop("Sparse methods not availabel yet, please unset nn")
         sparse <- TRUE        
         ninfo <- get.knnx(coords,coords,nn)
         u <- NULL
@@ -79,7 +80,7 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
     tm <- Y[,1]
     delta <- Y[,2]
     
-    mlmod <- flexsurvreg(formula,data=data,dist=dist)
+    mlmod <- suppressWarnings(flexsurvreg(formula,data=data,dist=dist))
     estim <- mlmod$opt$par 
 
     if(dist=="exp"){    

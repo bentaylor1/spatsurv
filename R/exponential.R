@@ -32,7 +32,7 @@ proposalvariance.exp <- function(X,delta,tm,betahat,omegahat,Yhat,priors,covmode
     logpost <- function(eta,tm,delta,X,beta,omega,Y,priors,covmodel,u){
         sigmainv <- solve(matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=covmodel$model,pars=covmodel$pars),n,n))
         cholsigmainv <- t(chol(sigmainv))
-        gamma <- cholsigmainv%*%(Y+exp(eta[1])^2/2)                    
+        gamma <- cholsigmainv%*%(Y-exp(eta[1])^2/2)                    
         n <- nrow(X)
         Xbeta <- X%*%beta        
         priorcontrib <- -(1/2)*sum(gamma^2) + do.call(priors$call,args=list(beta=beta,omega=omega,eta=eta,priors=priors))
@@ -61,7 +61,7 @@ proposalvariance.exp <- function(X,delta,tm,betahat,omegahat,Yhat,priors,covmode
     Sigma <- matrix(getcov(u=u,sigma=exp(etahat[1]),phi=exp(etahat[2]),model=covmodel$model,pars=covmodel$pars),n,n)
     covinv <- solve(Sigma)
     cholcovinv <- t(chol(covinv))
-    gammahat <- cholcovinv%*%(Yhat+exp(etahat[1])^2/2)  
+    gammahat <- cholcovinv%*%(Yhat-exp(etahat[1])^2/2)  
     
     cholSigma <- t(chol(Sigma))    
     #mu <- -sd(gammahat)^2/2

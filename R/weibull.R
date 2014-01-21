@@ -32,17 +32,17 @@ proposalvariance.weibull <- function(X,delta,tm,betahat,omegahat,Yhat,priors,cov
     logpost <- function(eta,tm,delta,X,beta,omega,Y,priors,covmodel,u){
         sigmainv <- solve(matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=covmodel$model,pars=covmodel$pars),n,n))
         cholsigmainv <- t(chol(sigmainv))
-        gamma <- cholsigmainv%*%(Y+exp(eta[1])^2/2)                    
+        gamma <- cholsigmainv%*%(Y-exp(eta[1])^2/2)                    
         
         alpha <- exp(omega[1])
         lambda <- exp(omega[2])
     
         n <- nrow(X)
         Xbeta <- X%*%beta
-        sigma <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=covmodel$model,pars=covmodel$pars),n,n)
-        cholsigma <- t(chol(sigma))
+        #sigma <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=covmodel$model,pars=covmodel$pars),n,n)
+        #cholsigma <- t(chol(sigma))
         priorcontrib <- -(1/2)*sum(gamma^2) + do.call(priors$call,args=list(beta=beta,omega=omega,eta=eta,priors=priors))
-        Y <- -eta[1]^2/2 + cholsigma%*%gamma
+        #Y <- -eta[1]^2/2 + cholsigma%*%gamma
         stuff <- Xbeta + Y
         expstuff <- exp(stuff)
     
@@ -70,7 +70,7 @@ proposalvariance.weibull <- function(X,delta,tm,betahat,omegahat,Yhat,priors,cov
     Sigma <- matrix(getcov(u=u,sigma=exp(etahat[1]),phi=exp(etahat[2]),model=covmodel$model,pars=covmodel$pars),n,n)
     covinv <- solve(Sigma)
     cholcovinv <- t(chol(covinv))
-    gammahat <- cholcovinv%*%(Yhat+exp(etahat[1])^2/2)  
+    gammahat <- cholcovinv%*%(Yhat-exp(etahat[1])^2/2)  
     
     cholSigma <- t(chol(Sigma))    
     #mu <- -sd(gammahat)^2/2
