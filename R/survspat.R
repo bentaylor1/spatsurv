@@ -9,12 +9,13 @@
 ##' @param covmodel an object of class covmodel, see ?covmodel
 ##' @param mcmc.control mcmc control parameters, see ?mcmcpars
 ##' @param priors an object of class Priors, see ?mcmcPriors
-##' @param nn If set to null (the default,) computations are performed with the full covariance matrix, if nn is set to a positive integer, this is the number of nearest neighbours to use in forming the sparse approximation to the covariance.
+##' @param control additional control parameters, see ?inference.control
 ##' @return the mcmc output
+##' @seealso \link{inference.control}
 ##' @export
 
 
-survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
+survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,control=inference.control(gridded=FALSE)){
 
     start <- Sys.time()
 
@@ -23,19 +24,46 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
     }
     
     coords <- coordinates(data)
-    data <- data@data
+
+    funtxt <- ""    
+    if(control$gridded){
+        funtxt <- ".gridded"
+    }
     
-    if(is.null(nn)){
-        sparse <- FALSE        
-        ninfo <- NULL
-        u <- as.vector(as.matrix(dist(coords)))
+    gridobj <- NULL
+   
+    if(control$gridded){
+        gridobj <- FFTgrid(spatialdata=data,cellwidth=control$cellwidth,ext=control$ext)
+    	del1 <- gridobj$del1
+    	del2 <- gridobj$del2
+    	Mext <- gridobj$Mext
+    	Next <- gridobj$Next
+    	mcens <- gridobj$mcens
+    	ncens <- gridobj$ncens    	
+    	## COMPUTE GRID DISTANCES ##
+    	x <- gridobj$mcens
+        y <- gridobj$ncens    
+        xidx <- rep(1:Mext,Next)
+        yidx <- rep(1:Next,each=Mext)
+        dxidx <- pmin(abs(xidx-xidx[1]),Mext-abs(xidx-xidx[1]))
+        dyidx <- pmin(abs(yidx-yidx[1]),Next-abs(yidx-yidx[1]))
+        u <- sqrt(((x[2]-x[1])*dxidx)^2+((y[2]-y[1])*dyidx)^2)
+        
+        spix <- grid2spix(xgrid=mcens,ygrid=mcens)
+        
+        control$fftgrid <- gridobj
+        control$idx <- over(data,geometry(spix))
+        control$Mext <- Mext
+        control$Next <- Next
+        control$uqidx <- unique(control$idx)
+        
+        cat("Output grid size: ",Mext/control$ext," x ",Next/control$ext,"\n")
     }
     else{
-        stop("Sparse methods not availabel yet, please unset nn")
-        sparse <- TRUE        
-        ninfo <- get.knnx(coords,coords,nn)
-        u <- NULL
-    }    
+        u <- as.vector(as.matrix(dist(coords)))
+    }
+    
+    data <- data@data  
                         
     ##########
     # This chunk of code borrowed from flexsurvreg    
@@ -71,73 +99,110 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
     
     ##########
     # End of borrowed code    
-    ##########                    
-                        
-    TRIGGER <- FALSE                    
+    ##########                                       
                         
     mcmcloop <- mcmcLoop(N=mcmc.control$nits,burnin=mcmc.control$burn,thin=mcmc.control$thin,progressor=mcmcProgressTextBar)                            
+              
+                  
                         
     tm <- Y[,1]
     delta <- Y[,2]
     
+    cat("\n","Getting initial estimates of model parameters using flexsurvreg","\n")
     mlmod <- suppressWarnings(flexsurvreg(formula,data=data,dist=dist))
-    estim <- mlmod$opt$par 
+    cat("Done.\n")
+    estim <- mlmod$opt$par
+    print(mlmod)
+    #browser() 
+    
+    cat("Calibrating MCMC algorithm and finding initial values ...\n")
+    
+    
 
     if(dist=="exp"){    
         betahat <- estim[2:length(estim)]
-        omegahat <- do.call(paste("transformestimates.",dist,sep=""),args=list(x=estim[1]))
+        omegahat <- do.call(paste("transformestimates.",dist,sep=""),args=list(x=exp(estim[1]))) 
+        omegahat <- log(omegahat)
     }
-    else if(dist=="weibull"|dist=="gamma"){    
+    else if(dist=="weibull"){    
         betahat <- estim[3:length(estim)]
-        omegahat <- do.call(paste("transformestimates.",dist,sep=""),args=list(x=estim[1:2]))
+        omegahat <- do.call(paste("transformestimates.",dist,sep=""),args=list(x=exp(estim[1:2])))
+        omegahat <- log(omegahat) 
     }
     else{
-        stop("Unknown dist, must be one of 'exp', 'weibull', or 'gamma'")    
+        stop("Unknown dist, must be one of 'exp' or 'weibull'")    
     }
     
     Yhat <- do.call(paste("estimateY.",dist,sep=""),args=list(X=X,betahat=betahat,omegahat=omegahat,tm=tm,delta=delta))    
-        
-    other <- do.call(paste("proposalvariance.",dist,sep=""),args=list(  X=X,
-                                                                        delta=delta,
-                                                                        tm=tm,
-                                                                        betahat=betahat,
-                                                                        omegahat=omegahat,
-                                                                        Yhat=Yhat,
-                                                                        priors=priors,
-                                                                        covmodel=covmodel,
-                                                                        u=u,
-                                                                        sparse=sparse,
-                                                                        ninfo=ninfo)) 
+       
+    other <- do.call(paste("proposalvariance.",dist,funtxt,sep=""),args=list(   X=X,
+                                                                                delta=delta,
+                                                                                tm=tm,
+                                                                                betahat=betahat,
+                                                                                omegahat=omegahat,
+                                                                                Yhat=Yhat,
+                                                                                priors=priors,
+                                                                                covmodel=covmodel,
+                                                                                u=u,
+                                                                                control=control)) 
     
     gammahat <- other$gammahat
     etahat <- other$etahat                                                                        
-    SIGMA <- other$sigma  
-                                                                          
-    SIGMAINV <- solve(SIGMA)
-    cholSIGMA <- Matrix(t(chol(SIGMA)))
-    
-    h <- 1
-    
+    SIGMA <- other$sigma 
+
     beta <- betahat
     omega <- omegahat
     eta <- etahat 
-    gamma <- gammahat
-    
-    gamma[gamma > 6] <- 8 # threshold estimated gamma.
-    gamma[gamma < -6] <- -8 # threshold estimated gamma.  
+ 
+    gamma <- rep(0,length(gammahat))
+    if(control$gridded){
+        gamma <- matrix(0,control$Mext,control$Next)
+    }
         
     lenbeta <- length(beta)
     lenomega <- length(omega)
     leneta <- length(eta)
     lengamma <- length(gamma)
     
-    print(SIGMA[1:(lenbeta+lenomega),1:(lenbeta+lenomega)])
+    
     
     npars <- lenbeta + lenomega + leneta + lengamma
     
-    LOGPOST <- get(paste("logposterior.",dist,sep=""))
+    SIGMA[1:(lenbeta+lenomega),1:(lenbeta+lenomega)] <- (1.65^2/((lenbeta+lenomega)^(1/3)))*SIGMA[1:(lenbeta+lenomega),1:(lenbeta+lenomega)]
+    SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)] <- 0.4*(2.38^2/leneta)* SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)]
+    SIGMA[(lenbeta+lenomega+leneta+1):(lenbeta+lenomega+leneta+lengamma),(lenbeta+lenomega+leneta+1):(lenbeta+lenomega+leneta+lengamma)] <- (1.65^2/(lengamma^(1/3)))*SIGMA[(lenbeta+lenomega+leneta+1):(lenbeta+lenomega+leneta+lengamma),(lenbeta+lenomega+leneta+1):(lenbeta+lenomega+leneta+lengamma)]    
     
-    TRIGGER <- TRUE
+    if(control$gridded){
+    
+        matidx <- (lenbeta+lenomega+leneta+1):npars
+        matidx <- matrix(matidx,nrow=length(matidx),ncol=2)
+               
+        SIGMAINV <- Matrix(0,npars,npars)
+        SIGMAINV[1:(lenbeta+lenomega+leneta),1:(lenbeta+lenomega+leneta)] <- solve(as.matrix(SIGMA[1:(lenbeta+lenomega+leneta),1:(lenbeta+lenomega+leneta)]))
+        SIGMAINV[matidx] <- 1/SIGMA[matidx]
+        
+        cholSIGMA <- Matrix(0,npars,npars)
+        cholSIGMA[1:(lenbeta+lenomega+leneta),1:(lenbeta+lenomega+leneta)] <- chol(as.matrix(SIGMA[1:(lenbeta+lenomega+leneta),1:(lenbeta+lenomega+leneta)]))
+        cholSIGMA[matidx] <- sqrt(SIGMA[matidx])
+        
+        matidx <- matrix(0,control$Mext,control$Next)
+        matidx[1:(control$Mext/control$ext),1:(control$Next/control$ext)] <- 1
+        matidx <- as.logical(matidx)
+    }
+    else{
+        browser()
+        SIGMAINV <- solve(SIGMA) # SIGMA is sparse, so this is easy to compute    
+        cholSIGMA <- Matrix(t(chol(SIGMA)))
+    }
+    #print(SIGMA[1:(lenbeta+lenomega),1:(lenbeta+lenomega)])    
+    
+    cat("Running MCMC ...\n")
+    
+    h <- 1
+    
+    
+    
+    LOGPOST <- get(paste("logposterior.",dist,funtxt,sep=""))
     
     oldlogpost <- LOGPOST(  tm=tm,
                             delta=delta,
@@ -148,8 +213,8 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
                             priors=priors,
                             covmodel=covmodel,
                             u=u,
-                            sparse=sparse,
-                            ninfo=ninfo)
+                            control=control)
+                                                        
     
     betasamp <- c()
     omegasamp <- c()
@@ -158,11 +223,19 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
     
     tarrec <- oldlogpost$logpost
     
+    print(SIGMA[1:8,1:8])
+    
+    
     while(nextStep(mcmcloop)){
     
         stuff <- c(beta,omega,eta,gamma)
         propmean <- stuff + (h/2)*SIGMA%*%oldlogpost$grad
         newstuff <- propmean + h*cholSIGMA%*%rnorm(npars)
+        
+        ngam <- newstuff[(lenbeta+lenomega+leneta+1):npars]
+        if(control$gridded){
+            ngam <- matrix(ngam,control$Mext,control$Next)
+        }
         
         newlogpost <- LOGPOST(  tm=tm,
                                 delta=delta,
@@ -170,20 +243,21 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
                                 beta=newstuff[1:lenbeta],
                                 omega=newstuff[(lenbeta+1):(lenbeta+lenomega)],
                                 eta=newstuff[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)],
-                                gamma=newstuff[(lenbeta+lenomega+leneta+1):npars],
+                                gamma=ngam,
                                 priors=priors,
                                 covmodel=covmodel,
                                 u=u,
-                                sparse=sparse,
-                                ninfo=ninfo)
+                                control=control)
                                 
-        revmean <- newstuff +  (h/2)*SIGMA%*%newlogpost$grad      
+        revmean <- newstuff +  (h/2)*SIGMA%*%newlogpost$grad  
+         
         
         revdiff <- as.matrix(stuff-revmean)
         forwdiff <- as.matrix(newstuff-propmean)
-        
+                       
         logfrac <- newlogpost$logpost - oldlogpost$logpost -0.5*t(revdiff)%*%SIGMAINV%*%revdiff + 0.5*t(forwdiff)%*%SIGMAINV%*%forwdiff
-        ac <- min(1,exp(logfrac))
+        
+        ac <- min(1,exp(as.numeric(logfrac)))
         
         if(ac>runif(1)){
             beta <- newstuff[1:lenbeta]
@@ -203,7 +277,12 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
             betasamp <- rbind(betasamp,as.vector(beta))
             omegasamp <- rbind(omegasamp,as.vector(omega))
             etasamp <- rbind(etasamp,as.vector(eta))
-            Ysamp <- rbind(Ysamp,as.vector(oldlogpost$Y))
+            if(control$gridded){
+                Ysamp <- rbind(Ysamp,as.vector(oldlogpost$Y[matidx]))
+            }
+            else{
+                Ysamp <- rbind(Ysamp,as.vector(oldlogpost$Y))
+            }
             tarrec <- c(tarrec,oldlogpost$logpost)
         }
     }
@@ -229,6 +308,13 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
     retlist$etasamp <- etasamp
     retlist$Ysamp <- Ysamp
     
+    if(control$gridded){
+        retlist$M <- Mext/control$ext
+        retlist$N <- Next/control$ext
+        retlist$xvals <- mcens[1:retlist$M]
+        retlist$yvals <- ncens[1:retlist$N]
+    }
+    
     retlist$tarrec <- tarrec
     retlist$lasth <- h
     
@@ -242,34 +328,3 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,nn=NULL){
 }
 
 
-
-##' transformestimates.exp function
-##'
-##' A function to transform estimates of the parameters of the exponential baseline hazard function, so they are commensurate with R's inbuilt density functions.
-##'
-##' @param x a vector of paramters 
-##' @return the transformed parameters. For the exponential model this is just the identity.
-##' @export
-
-transformestimates.exp <- function(x){
-    return(x)
-}
-
-##' transformestimates.weibull function
-##'
-##' A function to transform estimates of the parameters of the weibull baseline hazard function, so they are commensurate with R's inbuilt density functions.
-##'
-##' @param x a vector of paramters
-##' @return the transformed parameters. For the weibull mode, this transforms the output from the MALA algorithm so it can be interpreted as 'shape' 'scale', see ?dweibull
-##' @export
-
-transformestimates.weibull <- function(x){
-    a <- exp(x[1]) # shape
-    b <- exp(x[2]) # scale
-    alpha <- a
-    lambda <- (1/b)^a
-
-    ans <- c(logalpha=log(alpha),loglambda=log(lambda))    
-    
-    return(ans)
-}

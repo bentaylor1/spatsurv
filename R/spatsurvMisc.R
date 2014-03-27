@@ -106,22 +106,23 @@ plotsurv <- function(spp,ss,maxcex=1,background=NULL,eventpt=19,eventcol="red",c
     
 }
 
-#empvari <- function(coords,z,plot=TRUE,...){
-#    if(length(z)!=nrow(coords)){
-#        stop("length(z) must equal nrow(coords)")
-#    }
-#    distmat <- as.matrix(dist(coords))
-#    diffz2 <- outer(as.vector(z),as.vector(z),FUN="-")^2 # squared differences between z values
-#    lt <- lower.tri(distmat)
-#
-#    x <- as.vector(distmat[lt])
-#    y <- as.vector(diffz2[lt])
-#    
-#    if(plot){
-#        plot(x,y,pch=".")  
-#        lines(lowess(x,y,...),col="red")
-#    } 
-#    
-#    browser()
-#    return(list(x=x,y=y))
-#}
+
+##' inference.control function
+##'
+##' A function to control inferential settings. 
+##'
+##' @param gridded logical. Whether to perform compuation on a grid. Default is FALSE. Note in version 0.9-1, this is still in the testing phase.
+##' @param cellwidth the width of computational cells to use 
+##' @param ext integer the number of times to extend the computational grid by in order to perform compuitation. The default is 2. 
+##' @return returns parameters to be used in the function survspat
+##' @seealso \link{survspat}
+##' @export
+
+inference.control <- function(gridded=FALSE,cellwidth=NULL,ext=2){
+    ans <- list()
+    ans$gridded <- gridded
+    ans$cellwidth <- cellwidth 
+    ans$ext <- ext 
+    class(ans) <- c("inference.control","list")
+    return(ans)
+}

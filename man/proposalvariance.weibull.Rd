@@ -3,7 +3,7 @@
 \title{proposalvariance.weibull function}
 \usage{
 proposalvariance.weibull(X, delta, tm, betahat, omegahat, Yhat, priors,
-  covmodel, u, sparse, ninfo)
+  covmodel, u, control)
 }
 \arguments{
   \item{X}{design matrix}
@@ -26,11 +26,8 @@ proposalvariance.weibull(X, delta, tm, betahat, omegahat, Yhat, priors,
 
   \item{u}{vector of distances between points}
 
-  \item{sparse}{logical: whether to use a full, or a sparse
-  representation of the covariance structure.}
-
-  \item{ninfo}{neighbourhood information for constructing
-  sparse matrix}
+  \item{control}{list of control parameters, see
+  ?inference.control}
 }
 \value{
 estimates of eta, gamma and a proposal variance matrixc for

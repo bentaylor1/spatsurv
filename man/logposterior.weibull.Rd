@@ -3,7 +3,7 @@
 \title{logposterior.weibull function}
 \usage{
 logposterior.weibull(tm, delta, X, beta, omega, eta, gamma, priors, covmodel, u,
-  sparse, ninfo)
+  control)
 }
 \arguments{
   \item{tm}{vector of observed times}
@@ -30,11 +30,8 @@ logposterior.weibull(tm, delta, X, beta, omega, eta, gamma, priors, covmodel, u,
 
   \item{u}{distance matrix}
 
-  \item{sparse}{logical: whether to use a full, or a sparse
-  representation of the covariance structure.}
-
-  \item{ninfo}{neighbourhood information for constructing
-  sparse matrix}
+  \item{control}{list of control parameters, see
+  ?inference.control}
 }
 \value{
 the log posterior
