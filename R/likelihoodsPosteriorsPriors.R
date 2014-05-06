@@ -120,18 +120,26 @@ logposterior_exponential_nospat <- function(tm,delta,X,beta,omega,betapriormean,
 ##' @param eta eta vector at which to evaluate the posterior
 ##' @param gamma the transformed latent Gaussian field at which to evaluate the posterior
 ##' @param priors the priors, an object of class mcmcPriors
-##' @param covmodel an object of class covmodel, see ?covmodel
+##' @param cov.model an object of class covmodel, see ?covmodel
 ##' @param u distance matrix
 ##' @param control list of control parameters, see ?inference.control
 ##' @return the log posterior
 ##' @return ...
 ##' @export
 
-logposterior.exp <- function(tm,delta,X,beta,omega,eta,gamma,priors,covmodel,u,control){
+logposterior.exp <- function(tm,delta,X,beta,omega,eta,gamma,priors,cov.model,u,control){
 
     n <- nrow(X)
     Xbeta <- X%*%beta
-    sigma <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=covmodel$model,pars=covmodel$pars),n,n)
+    if(inherits(cov.model,"covmodel")){
+        sigma <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),n,n)
+    }
+    else if(inherits(cov.model,"function")){
+        sigma <- matrix(cov.model(u=u,pars=eta),n,n)
+    }
+    else{
+        stop("Unknkown covariance type")
+    }
     cholsigma <- t(chol(sigma))
     priorcontrib <- -(1/2)*sum(gamma^2) + do.call(priors$call,args=list(beta=beta,omega=omega,eta=eta,priors=priors))
     Y <- -eta[1]^2/2 + cholsigma%*%gamma
@@ -176,19 +184,28 @@ logposterior.exp <- function(tm,delta,X,beta,omega,eta,gamma,priors,covmodel,u,c
 ##' @param eta eta vector at which to evaluate the posterior
 ##' @param gamma the transformed latent Gaussian field at which to evaluate the posterior
 ##' @param priors the priors, an object of class mcmcPriors
-##' @param covmodel an object of class covmodel, see ?covmodel
+##' @param cov.model an object of class covmodel, see ?covmodel
 ##' @param u distance matrix
 ##' @param control list of control parameters, see ?inference.control
 ##' @return the log posterior
 ##' @return ...
 ##' @export
 
-logposterior.exp.gridded <- function(tm,delta,X,beta,omega,eta,gamma,priors,covmodel,u,control){
+logposterior.exp.gridded <- function(tm,delta,X,beta,omega,eta,gamma,priors,cov.model,u,control){
 
     n <- nrow(X)
     Xbeta <- X%*%beta
 
-    covbase <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=covmodel$model,pars=covmodel$pars),control$Mext,control$Next)
+    
+    if(inherits(cov.model,"covmodel")){
+        covbase <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),control$Mext,control$Next)
+    }
+    else if(inherits(cov.model,"function")){
+        covbase <- matrix(cov.model(u=u,pars=eta),control$Mext,control$Next)
+    }
+    else{
+        stop("Unknkown covariance type")
+    }
     invrootQeigs <- sqrt(Re(fft(covbase)))
     
     Ygrid <- YfromGamma(gamma,invrootQeigs=invrootQeigs,mu=-(exp(eta[1]))^2/2)   
@@ -242,21 +259,29 @@ logposterior.exp.gridded <- function(tm,delta,X,beta,omega,eta,gamma,priors,covm
 ##' @param eta eta vector at which to evaluate the posterior
 ##' @param gamma the transformed latent Gaussian field at which to evaluate the posterior
 ##' @param priors the priors, an object of class mcmcPriors
-##' @param covmodel an object of class covmodel, see ?covmodel
+##' @param cov.model an object of class covmodel, see ?covmodel
 ##' @param u distance matrix
 ##' @param control list of control parameters, see ?inference.control
 ##' @return the log posterior
 ##' @return ...
 ##' @export
 
-logposterior.weibull <- function(tm,delta,X,beta,omega,eta,gamma,priors,covmodel,u,control){
+logposterior.weibull <- function(tm,delta,X,beta,omega,eta,gamma,priors,cov.model,u,control){
 
     alpha <- exp(omega[1])
     lambda <- exp(omega[2])
 
     n <- nrow(X)
     Xbeta <- X%*%beta
-    sigma <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=covmodel$model,pars=covmodel$pars),n,n)
+    if(inherits(cov.model,"covmodel")){
+        sigma <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),n,n)
+    }
+    else if(inherits(cov.model,"function")){
+        sigma <- matrix(cov.model(u=u,pars=eta),n,n)
+    }
+    else{
+        stop("Unknkown covariance type")
+    }
     cholsigma <- t(chol(sigma))
     priorcontrib <- -(1/2)*sum(gamma^2) + do.call(priors$call,args=list(beta=beta,omega=omega,eta=eta,priors=priors))
     Y <- -eta[1]^2/2 + cholsigma%*%gamma
@@ -308,14 +333,14 @@ logposterior.weibull <- function(tm,delta,X,beta,omega,eta,gamma,priors,covmodel
 ##' @param eta eta vector at which to evaluate the posterior
 ##' @param gamma the transformed latent Gaussian field at which to evaluate the posterior
 ##' @param priors the priors, an object of class mcmcPriors
-##' @param covmodel an object of class covmodel, see ?covmodel
+##' @param cov.model an object of class covmodel, see ?covmodel
 ##' @param u distance matrix
 ##' @param control list of control parameters, see ?inference.control
 ##' @return the log posterior
 ##' @return ...
 ##' @export
 
-logposterior.weibull.gridded <- function(tm,delta,X,beta,omega,eta,gamma,priors,covmodel,u,control){
+logposterior.weibull.gridded <- function(tm,delta,X,beta,omega,eta,gamma,priors,cov.model,u,control){
 
     alpha <- exp(omega[1])
     lambda <- exp(omega[2])
@@ -323,7 +348,15 @@ logposterior.weibull.gridded <- function(tm,delta,X,beta,omega,eta,gamma,priors,
     n <- nrow(X)
     Xbeta <- X%*%beta
 
-    covbase <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=covmodel$model,pars=covmodel$pars),control$Mext,control$Next)
+    if(inherits(cov.model,"covmodel")){
+        covbase <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),control$Mext,control$Next)
+    }
+    else if(inherits(cov.model,"function")){
+        covbase <- matrix(cov.model(u=u,pars=eta),control$Mext,control$Next)
+    }
+    else{
+        stop("Unknkown covariance type")
+    }
     invrootQeigs <- sqrt(Re(fft(covbase)))
     
     Ygrid <- YfromGamma(gamma,invrootQeigs=invrootQeigs,mu=-(exp(eta[1]))^2/2)   

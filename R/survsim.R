@@ -34,7 +34,15 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
     n <- nrow(X)
     u <- as.vector(distmat)
     
-    sigma <- matrix(getcov(u=u,sigma=sigmaphi[1],phi=sigmaphi[2],model=cov.model$model,pars=cov.model$pars),n,n)
+    if(inherits(cov.model,"fromRandomFieldsCovarianceFct")){
+        sigma <- matrix(getcov(u=u,sigma=sigmaphi[1],phi=sigmaphi[2],model=cov.model$model,pars=cov.model$pars),n,n)
+    }
+    else if(inherits(cov.model,"fromUserFunction")){
+        sigma <- matrix(cov.model$eval(u=u,pars=log(c(sigmaphi))),n,n)
+    }
+    else{
+        stop("Unknkown covariance type")
+    }
     sigmachol <- t(chol(sigma))
     Y <- -sigmaphi[1]^2/2+sigmachol%*%rnorm(n)
     expY <- exp(Y)  

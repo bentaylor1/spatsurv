@@ -68,6 +68,9 @@ derivlogindepGaussianprior <- function(beta=NULL,omega=NULL,eta=NULL,priors){
 
 ##' quadapprox function
 ##'
+##' NOTE THIS FUNCTION HAS NOW BEEN SUPERCEDED BY THE FUNCTION QuadApprox
+##'
+##'
 ##' A function to compute the second derivative of a function using a quadratic approximation to the function on a 
 ##' grid of points defined by xseq and yseq. Also returns the local maximum. 
 ##'
@@ -111,4 +114,97 @@ quadapprox <- function(fun,xseq,yseq,...){
     #print(paste("Estimated exp(eta):",exp(eta1est),",",exp(eta2est)))
     
     return(list(max=c(eta1est,eta2est),curvature=sigmainv,mod=mod)) 
+}
+
+
+
+##' QuadApprox function
+##'
+##' A function to compute the second derivative of a function (of several real variables) using a quadratic approximation  on a 
+##' grid of points defined by the list argRanges. Also returns the local maximum. 
+##'
+##' @param fun a function
+##' @param npts integer number of points in each direction
+##' @param argRanges a list of ranges on which to construct the grid for each parameter 
+##' @param xseq sequence of x-values defining grid on which to compute the approximation 
+##' @param yseq sequence of y-values defining grid on which to compute the approximation 
+##' @param ... other arguments to be passed to fun
+##' @return a 2 by 2 matrix containing the curvature at the maximum and the (x,y) value at which the maximum occurs 
+##' @export
+
+
+QuadApprox <- function(fun,npts,argRanges,plot=TRUE,...){
+
+    npar <- length(argRanges)
+    vals <- lapply(argRanges,function(x){seq(x[1],x[2],length.out=npts)})
+    parn <- paste("x",1:npar,sep="")
+    parnames <- parn # later this will be used in the call to lm
+    paridx <- as.list(rep(NA,1+2*npar+choose(npar,2))) # this will be used later to find the function maximum via a set of simultaneous equations (intercept, single, squared and mixed terms)
+    paridx[(1+1:npar)] <- 1:npar
+    gr <- expand.grid(vals)
+    gr2 <- gr^2
+    parnames <- c(parnames,paste("x",1:npar,".2",sep=""))
+    paridx[(npar+2):(2*npar+1)] <- 1:npar
+    grcross <- matrix(NA,nrow(gr),choose(npar,2))
+    ct <- 1
+    for(i in 1:(npar-1)){
+        for(j in (i+1):npar){    
+            grcross[,ct] <- gr[,i]*gr[,j]
+            parnames <- c(parnames,paste(parn[i],parn[j],collapse="",sep=""))
+            paridx[[2*npar+1+ct]] <- c(i,j)
+            ct <- ct + 1
+        }
+    }
+    partype <- c("intercept",rep("single",npar),rep("squared",npar),rep("mixed",choose(npar,2)))
+    dataf <- cbind(gr,gr2,grcross)
+    names(dataf) <- parnames
+    
+    dataf$funvals <- apply(dataf,1,function(params){fun(params,...)})
+    if(plot){
+        if(npar==2){
+            image.plot(gr[,1],gr[,2],matrix(dataf$funvals,npts,npts),main="Function")
+        }  
+    }
+    
+    form <- paste("funvals ~",paste(parnames,collapse=" + "))
+     
+    
+    mod <- lm(form,data=dataf)
+    co <- coefficients(mod)
+    
+    if(plot){
+        if(npar==2){
+            image.plot(gr[,1],gr[,2],matrix(fitted(mod),npts,npts),main="Quadratic Approximation")
+        }  
+    }    
+    
+    # now construct matrix of second derivatives
+    sigmainv <- matrix(NA,npar,npar)
+    diag(sigmainv) <- 2 * co[which(partype=="squared")] # first the diagonal elements
+    idx <- which(partype=="mixed") # now the off diagonals
+    ct <- 1
+    for(i in 1:(npar-1)){
+        for(j in (i+1):npar){    
+            sigmainv[i,j] <- co[idx[ct]]
+            sigmainv[j,i] <- co[idx[ct]]
+            ct <- ct + 1
+        }
+    }
+    
+    # lastly, create a system of simultaneous equations, Ax = b, which when solved gives the maximum
+    b <- (-1) * matrix(co[which(partype=="single")],npar,1)
+    A <- matrix(NA,npar,npar)
+    diag(A) <- 2 * co[which(partype=="squared")]
+    for(i in 1:(npar-1)){
+        for(j in (i+1):npar){
+            tst <- sapply(paridx,function(x){any(x==i)&any(x==j)})
+            idx <- which(tst)   
+            A[i,j] <- co[idx]
+            A[j,i] <- co[idx]
+        }
+    }
+
+    etaest <- as.vector(solve(A)%*%b) # now solve the system of simultaneous equations to get an initial guess for eta
+    
+    return(list(max=etaest,curvature=sigmainv,mod=mod)) 
 }

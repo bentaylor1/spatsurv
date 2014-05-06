@@ -55,7 +55,7 @@ if(TRUE){
     ss <- survspat( formula=ss~age+sex+cancer,
                     data=spatdat,
                     dist=DIST,
-                    covmodel=covmodel(model="exponential",pars=NULL),
+                    cov.model=covmodel(model="exponential",pars=NULL),
                     mcmc.control=mcmcpars(nits=100,burn=10,thin=9),
                     priors=priors)
 }

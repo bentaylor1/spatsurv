@@ -6,7 +6,7 @@
 ##' @param formula see ?flexsurvreg 
 ##' @param data a SpatialPointsDataFrame object
 ##' @param dist choice of distribution function for baseline hazard options are: "exp"
-##' @param covmodel an object of class covmodel, see ?covmodel
+##' @param cov.model an object of class covmodel, see ?covmodel
 ##' @param mcmc.control mcmc control parameters, see ?mcmcpars
 ##' @param priors an object of class Priors, see ?mcmcPriors
 ##' @param control additional control parameters, see ?inference.control
@@ -15,7 +15,13 @@
 ##' @export
 
 
-survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,control=inference.control(gridded=FALSE)){
+survspat <- function(   formula,
+                        data,
+                        dist,
+                        cov.model,
+                        mcmc.control,
+                        priors,
+                        control=inference.control(gridded=FALSE)){
 
     start <- Sys.time()
 
@@ -142,7 +148,7 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,control=infe
                                                                                 omegahat=omegahat,
                                                                                 Yhat=Yhat,
                                                                                 priors=priors,
-                                                                                covmodel=covmodel,
+                                                                                cov.model=cov.model,
                                                                                 u=u,
                                                                                 control=control)) 
     
@@ -190,7 +196,7 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,control=infe
         matidx <- as.logical(matidx)
     }
     else{
-        browser()
+        #browser()
         SIGMAINV <- solve(SIGMA) # SIGMA is sparse, so this is easy to compute    
         cholSIGMA <- Matrix(t(chol(SIGMA)))
     }
@@ -211,7 +217,7 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,control=infe
                             eta=eta,
                             gamma=gamma,
                             priors=priors,
-                            covmodel=covmodel,
+                            cov.model=cov.model,
                             u=u,
                             control=control)
                                                         
@@ -245,7 +251,7 @@ survspat <- function(formula,data,dist,covmodel,mcmc.control,priors,control=infe
                                 eta=newstuff[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)],
                                 gamma=ngam,
                                 priors=priors,
-                                covmodel=covmodel,
+                                cov.model=cov.model,
                                 u=u,
                                 control=control)
                                 
