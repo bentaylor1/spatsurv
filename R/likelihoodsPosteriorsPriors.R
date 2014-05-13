@@ -131,15 +131,9 @@ logposterior.exp <- function(tm,delta,X,beta,omega,eta,gamma,priors,cov.model,u,
 
     n <- nrow(X)
     Xbeta <- X%*%beta
-    if(inherits(cov.model,"covmodel")){
-        sigma <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),n,n)
-    }
-    else if(inherits(cov.model,"function")){
-        sigma <- matrix(cov.model(u=u,pars=eta),n,n)
-    }
-    else{
-        stop("Unknkown covariance type")
-    }
+    
+    sigma <- matrix(EvalCov(cov.model,u=u,parameters=eta),n,n)
+    
     cholsigma <- t(chol(sigma))
     priorcontrib <- -(1/2)*sum(gamma^2) + do.call(priors$call,args=list(beta=beta,omega=omega,eta=eta,priors=priors))
     Y <- -eta[1]^2/2 + cholsigma%*%gamma
@@ -167,6 +161,8 @@ logposterior.exp <- function(tm,delta,X,beta,omega,eta,gamma,priors,cov.model,u,
     }   
     
     grad <- grad + deriv
+    
+    #browser()
 
     return(list(logpost=logpost,grad=grad,Y=Y))
 }
@@ -195,17 +191,9 @@ logposterior.exp.gridded <- function(tm,delta,X,beta,omega,eta,gamma,priors,cov.
 
     n <- nrow(X)
     Xbeta <- X%*%beta
-
+        
+    covbase <- matrix(EvalCov(cov.model,u=u,parameters=eta),control$Mext,control$Next)
     
-    if(inherits(cov.model,"covmodel")){
-        covbase <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),control$Mext,control$Next)
-    }
-    else if(inherits(cov.model,"function")){
-        covbase <- matrix(cov.model(u=u,pars=eta),control$Mext,control$Next)
-    }
-    else{
-        stop("Unknkown covariance type")
-    }
     invrootQeigs <- sqrt(Re(fft(covbase)))
     
     Ygrid <- YfromGamma(gamma,invrootQeigs=invrootQeigs,mu=-(exp(eta[1]))^2/2)   
@@ -241,6 +229,10 @@ logposterior.exp.gridded <- function(tm,delta,X,beta,omega,eta,gamma,priors,cov.
     grad[(lenbeta+lenomega+leneta+1):npars] <- grad[(lenbeta+lenomega+leneta+1):npars] + Re((1/(control$Mext*control$Next))*fft(invrootQeigs*fft(bitsnbobs,inverse=TRUE)))
       
     grad <- grad + deriv
+    
+    #image.plot(control$fftgrid$mcens[1:64],control$fftgrid$ncens[1:64],matrix(grad[-(1:6)],128,128)[1:64,1:64])
+    #points(coords)
+    #browser()
 
     return(list(logpost=logpost,grad=grad,Y=Ygrid))
 }
@@ -273,15 +265,9 @@ logposterior.weibull <- function(tm,delta,X,beta,omega,eta,gamma,priors,cov.mode
 
     n <- nrow(X)
     Xbeta <- X%*%beta
-    if(inherits(cov.model,"covmodel")){
-        sigma <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),n,n)
-    }
-    else if(inherits(cov.model,"function")){
-        sigma <- matrix(cov.model(u=u,pars=eta),n,n)
-    }
-    else{
-        stop("Unknkown covariance type")
-    }
+    
+    sigma <- matrix(EvalCov(cov.model,u=u,parameters=eta),n,n)
+    
     cholsigma <- t(chol(sigma))
     priorcontrib <- -(1/2)*sum(gamma^2) + do.call(priors$call,args=list(beta=beta,omega=omega,eta=eta,priors=priors))
     Y <- -eta[1]^2/2 + cholsigma%*%gamma
@@ -348,15 +334,8 @@ logposterior.weibull.gridded <- function(tm,delta,X,beta,omega,eta,gamma,priors,
     n <- nrow(X)
     Xbeta <- X%*%beta
 
-    if(inherits(cov.model,"covmodel")){
-        covbase <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),control$Mext,control$Next)
-    }
-    else if(inherits(cov.model,"function")){
-        covbase <- matrix(cov.model(u=u,pars=eta),control$Mext,control$Next)
-    }
-    else{
-        stop("Unknkown covariance type")
-    }
+    covbase <- matrix(EvalCov(cov.model,u=u,parameters=eta),control$Mext,control$Next)    
+    
     invrootQeigs <- sqrt(Re(fft(covbase)))
     
     Ygrid <- YfromGamma(gamma,invrootQeigs=invrootQeigs,mu=-(exp(eta[1]))^2/2)   

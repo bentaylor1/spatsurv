@@ -65,56 +65,58 @@ derivlogindepGaussianprior <- function(beta=NULL,omega=NULL,eta=NULL,priors){
 
 
 
+##
+## NOTE THIS FUNCTION HAS BEEN REPLACED WITH QuadApprox
+##
+## quadapprox function
+##
+## NOTE THIS FUNCTION HAS NOW BEEN SUPERCEDED BY THE FUNCTION QuadApprox
+##
+##
+## A function to compute the second derivative of a function using a quadratic approximation to the function on a 
+## grid of points defined by xseq and yseq. Also returns the local maximum. 
+##
+## @param fun a function 
+## @param xseq sequence of x-values defining grid on which to compute the approximation 
+## @param yseq sequence of y-values defining grid on which to compute the approximation 
+## @param ... other arguments to be passed to fun
+## @return a 2 by 2 matrix containing the curvature at the maximum and the (x,y) value at which the maximum occurs 
+## @export
 
-##' quadapprox function
-##'
-##' NOTE THIS FUNCTION HAS NOW BEEN SUPERCEDED BY THE FUNCTION QuadApprox
-##'
-##'
-##' A function to compute the second derivative of a function using a quadratic approximation to the function on a 
-##' grid of points defined by xseq and yseq. Also returns the local maximum. 
-##'
-##' @param fun a function 
-##' @param xseq sequence of x-values defining grid on which to compute the approximation 
-##' @param yseq sequence of y-values defining grid on which to compute the approximation 
-##' @param ... other arguments to be passed to fun
-##' @return a 2 by 2 matrix containing the curvature at the maximum and the (x,y) value at which the maximum occurs 
-##' @export
 
-
-quadapprox <- function(fun,xseq,yseq,...){
-    nx <- length(xseq)
-    ny <- length(yseq)
-    funvals <- matrix(NA,nx,ny)
-    #pb <- txtProgressBar(min=0,max=nx*ny,style=3)
-    count <- 0
-    gr <- expand.grid(xseq,yseq)
-    funvals <- apply(gr,1,function(xy){fun(c(xy[1],xy[2]),...)})
-    image.plot(xseq,yseq,matrix(funvals,nx,ny),main="Approx Posterior")
-    funvals <- as.vector(funvals)
-    x <- gr[,1]
-    x2 <- gr[,1]^2
-    y <- gr[,2]    
-    y2 <- gr[,2]^2
-    xy <- gr[,1]*gr[,2]
-    mod <- lm(funvals~x2+x+y2+y+xy)
-    image.plot(xseq,yseq,matrix(fitted(mod),nx,ny),main="Quadratic Approximation")
-    co <- coefficients(mod)
-    d2dxx <- 2*co[2]
-    d2dyy <- 2*co[4]
-    d2dydx <- co[6]   
-    
-    sigmainv <- matrix(c(d2dxx,d2dydx,d2dydx,d2dyy),2,2) 
-    
-    #print(-solve(sigmainv))
-    
-    eta1est <- (-2*co[3]*co[4]+co[5]*co[6])/(4*co[2]*co[4]-co[6]^2)
-    eta2est <- (-co[5]-co[6]*eta1est)/(2*co[4])
-    
-    #print(paste("Estimated exp(eta):",exp(eta1est),",",exp(eta2est)))
-    
-    return(list(max=c(eta1est,eta2est),curvature=sigmainv,mod=mod)) 
-}
+#quadapprox <- function(fun,xseq,yseq,...){
+#    nx <- length(xseq)
+#    ny <- length(yseq)
+#    funvals <- matrix(NA,nx,ny)
+#    #pb <- txtProgressBar(min=0,max=nx*ny,style=3)
+#    count <- 0
+#    gr <- expand.grid(xseq,yseq)
+#    funvals <- apply(gr,1,function(xy){fun(c(xy[1],xy[2]),...)})
+#    image.plot(xseq,yseq,matrix(funvals,nx,ny),main="Approx Posterior")
+#    funvals <- as.vector(funvals)
+#    x <- gr[,1]
+#    x2 <- gr[,1]^2
+#    y <- gr[,2]    
+#    y2 <- gr[,2]^2
+#    xy <- gr[,1]*gr[,2]
+#    mod <- lm(funvals~x2+x+y2+y+xy)
+#    image.plot(xseq,yseq,matrix(fitted(mod),nx,ny),main="Quadratic Approximation")
+#    co <- coefficients(mod)
+#    d2dxx <- 2*co[2]
+#    d2dyy <- 2*co[4]
+#    d2dydx <- co[6]   
+#    
+#    sigmainv <- matrix(c(d2dxx,d2dydx,d2dydx,d2dyy),2,2) 
+#    
+#    #print(-solve(sigmainv))
+#    
+#    eta1est <- (-2*co[3]*co[4]+co[5]*co[6])/(4*co[2]*co[4]-co[6]^2)
+#    eta2est <- (-co[5]-co[6]*eta1est)/(2*co[4])
+#    
+#    #print(paste("Estimated exp(eta):",exp(eta1est),",",exp(eta2est)))
+#    
+#    return(list(max=c(eta1est,eta2est),curvature=sigmainv,mod=mod)) 
+#}
 
 
 
@@ -126,8 +128,7 @@ quadapprox <- function(fun,xseq,yseq,...){
 ##' @param fun a function
 ##' @param npts integer number of points in each direction
 ##' @param argRanges a list of ranges on which to construct the grid for each parameter 
-##' @param xseq sequence of x-values defining grid on which to compute the approximation 
-##' @param yseq sequence of y-values defining grid on which to compute the approximation 
+##' @param plot whether to plot the quadratic approximation of the posterior (for two-dimensional parameters only)
 ##' @param ... other arguments to be passed to fun
 ##' @return a 2 by 2 matrix containing the curvature at the maximum and the (x,y) value at which the maximum occurs 
 ##' @export
@@ -159,22 +160,25 @@ QuadApprox <- function(fun,npts,argRanges,plot=TRUE,...){
     dataf <- cbind(gr,gr2,grcross)
     names(dataf) <- parnames
     
-    dataf$funvals <- apply(dataf,1,function(params){fun(params,...)})
+    cat("Constructing quadratic approximation to posterior (this can take some time) ...\n")
+    dataf$funvals <- apply(gr,1,function(params){fun(params,...)})
+    cat("Done.\n")
+    
+    
     if(plot){
         if(npar==2){
-            image.plot(gr[,1],gr[,2],matrix(dataf$funvals,npts,npts),main="Function")
+            image.plot(vals[[1]],vals[[2]],matrix(dataf$funvals,npts,npts),main="Function")
         }  
     }
     
     form <- paste("funvals ~",paste(parnames,collapse=" + "))
      
-    
     mod <- lm(form,data=dataf)
     co <- coefficients(mod)
     
     if(plot){
         if(npar==2){
-            image.plot(gr[,1],gr[,2],matrix(fitted(mod),npts,npts),main="Quadratic Approximation")
+            image.plot(vals[[1]],vals[[2]],matrix(fitted(mod),npts,npts),main="Quadratic Approximation")
         }  
     }    
     
@@ -204,7 +208,104 @@ QuadApprox <- function(fun,npts,argRanges,plot=TRUE,...){
         }
     }
 
-    etaest <- as.vector(solve(A)%*%b) # now solve the system of simultaneous equations to get an initial guess for eta
+    etaest <- as.vector(solve(A)%*%b) # now solve the system of simultaneous equations to get an initial guess for eta 
     
+    sigmainv <- fixmatrix(sigmainv)
+
     return(list(max=etaest,curvature=sigmainv,mod=mod)) 
+}
+
+
+
+
+##' fixmatrix function
+##'
+##' A function to 
+##'
+##' @param mat X 
+##' @return ...
+##' @export
+
+fixmatrix <- function(mat){
+    
+    mat <- (-1)*mat # since mat is curvature, the negative *should* have positive eigenvalues
+    ev <- eigen(mat)$values
+    if(all(ev>0)){
+        return((-1)*mat)
+    }
+    else if(all(ev<0)){
+        stop("Estimated covariance matrix for eta has all negative eigenvalues")
+    }
+    else{
+        cat("Fixing non positive definite covariance matrix for eta ...\n") 
+    
+        diag(mat) <- abs(diag(mat)) # hmmmm ....        
+               
+        if(all(dim(mat)==2)){
+            fun <- function(x){
+                tmp <- mat
+                tmp[1,2] <- tmp[2,1] <- mat[1,2] / x
+                posev <- abs(ev)
+                ev1 <- eigen(tmp)$values
+                if(!all(ev1>0)){
+                    return(.Machine$double.xmax)
+                }
+                else{
+                    df1 <- (posev[1]-ev1[1])/posev[1]
+                    df2 <- (posev[2]-ev1[2])/posev[2]
+                    return(df1^2+df2^2)
+                }                
+            }
+            op <- suppressWarnings(try(optimise(fun,interval=c(0,10))))
+            if(inherits(op,"try-error")){
+                stop("Failed to fix negative definite matix")
+            }
+            ans <- mat
+            ans[1,2] <- ans[2,1] <- mat[1,2] / op$minimum
+                       
+        }
+        else{
+            #browser()
+            fun1 <- function(pars){
+                tmp <- mat
+                tmp[lower.tri(tmp)] <- tmp[lower.tri(tmp)] / pars
+                tmp[upper.tri(tmp)] <- tmp[upper.tri(tmp)] / pars
+                posev <- abs(ev)
+                ev1 <- eigen(tmp)$values
+                if(!all(ev1>0)){
+                    return(.Machine$double.xmax)
+                }
+                else{
+                    dff <- sum(((posev-ev1)/posev)^2)
+                    return(dff)
+                }                
+            }
+            op <- suppressWarnings(try(optim(par=rep(1,ncol(mat)),fn=fun1)))
+            if(inherits(op,"try-error")){
+                stop("Failed to fix negative definite matix")
+            }
+            
+            ans <- mat
+            ans[lower.tri(ans)] <- ans[lower.tri(ans)] / op$par
+            ans[upper.tri(ans)] <- ans[upper.tri(ans)] / op$par
+        }
+        
+
+        ct <- nrow(ans)        
+        if(!all(eigen(ans)$values>0)){
+            while(!all(eigen(ans)$values>0) & ct>0){
+                ans[ct,1:(ct-1)] <- 0
+                ans[1:(ct-1),ct] <- 0
+                ct <- ct - 1
+            }    
+        }
+        
+        if(!all(eigen(ans)$values>0)){
+            stop("Failed to fix negative definite matix")
+        }
+        
+        ans <- (-1)*ans              
+        
+        return(ans)    
+    } 
 }

@@ -47,15 +47,7 @@ proposalvariance.exp <- function(X,delta,tm,betahat,omegahat,Yhat,priors,cov.mod
     n <- length(tm)
     lenbeta <- length(betahat)
     lenomega <- length(omegahat)
-    if(inherits(cov.model,"fromRandomFieldsCovarianceFct")){
-        leneta <- 2
-    }
-    else if(inherits(cov.model,"fromUserFunction")){
-        leneta <- attr(cov.model,"npar")
-    }
-    else{
-        stop("Unknkown covariance type")
-    }
+    leneta <- getleneta(cov.model)
     lenY <- length(Yhat)
     npars <- lenbeta + lenomega + leneta + lenY
     
@@ -63,7 +55,8 @@ proposalvariance.exp <- function(X,delta,tm,betahat,omegahat,Yhat,priors,cov.mod
     
     # eta
     logpost <- function(eta,tm,delta,X,beta,omega,Y,priors,cov.model,u){
-        sigmainv <- solve(matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),n,n))
+        #sigmainv <- solve(matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),n,n))
+        sigmainv <- solve(matrix(EvalCov(cov.model=cov.model,u=u,parameters=eta),n,n))
         cholsigmainv <- t(chol(sigmainv))
         gamma <- cholsigmainv%*%(Y-exp(eta[1])^2/2)                    
         n <- nrow(X)
@@ -74,30 +67,14 @@ proposalvariance.exp <- function(X,delta,tm,betahat,omegahat,Yhat,priors,cov.mod
         logpost <- sum(delta*(stuff)-expstuff*tm) + priorcontrib # first term, sum(log(diag(cholsigmainv))), is the Jacobian
         return(logpost)
     }
-    #ngrid <- 20
-    #if(length(priors$etaprior$mean)==1){
-    #    xseq <- seq(priors$etaprior$mean-1.96*priors$etaprior$sd,priors$etaprior$mean+1.96*priors$etaprior$sd,length.out=ngrid)
-    #    yseq <- xseq
-    #}
-    #else{
-    #    xseq <- seq(priors$etaprior$mean[1]-1.96*priors$etaprior$sd[1],priors$etaprior$mean[1]+1.96*priors$etaprior$sd[1],length.out=ngrid)
-    #    yseq <- seq(priors$etaprior$mean[2]-1.96*priors$etaprior$sd[2],priors$etaprior$mean[2]+1.96*priors$etaprior$sd[2],length.out=ngrid)
-    #}
-    #qa <- quadapprox(logpost,xseq=xseq,yseq=yseq,tm=tm,delta=delta,X=X,beta=betahat,omega=omegahat,Y=Yhat,priors=priors,cov.model=cov.model,u=u)
 
-    rgs <- list()
-    if(length(priors$etaprior$mean)==1){
-        for(i in 1:leneta){
-            rgs[[i]] <- c(priors$etaprior$mean-1.96*priors$etaprior$sd,priors$etaprior$mean+1.96*priors$etaprior$sd)
-        }
+    npts <- 20
+    if(leneta>=3){
+        npts <- 10
     }
-    else{
-        for(i in 1:leneta){
-            rgs[[i]] <- c(priors$etaprior$mean[i]-1.96*priors$etaprior$sd[i],priors$etaprior$mean[i]+1.96*priors$etaprior$sd[i])
-        }
-    }    
+    rgs <- getparranges(priors=priors,leneta=leneta)   
+    qa <- QuadApprox(logpost,npts=npts,argRanges=rgs,tm=tm,delta=delta,X=X,beta=betahat,omega=omegahat,Y=Yhat,priors=priors,cov.model=cov.model,u=u)
     
-    qa <- QuadApprox(logpost,npts=20,argRanges=rgs,tm=tm,delta=delta,X=X,beta=betahat,omega=omegahat,Y=Yhat,priors=priors,cov.model=cov.model,u=u)
     matr <- qa$curvature
     etahat <- qa$max
     
@@ -105,7 +82,8 @@ proposalvariance.exp <- function(X,delta,tm,betahat,omegahat,Yhat,priors,cov.mod
     sigma[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)] <- matr    
     
     #estimate of gamma
-    Sigma <- matrix(getcov(u=u,sigma=exp(etahat[1]),phi=exp(etahat[2]),model=cov.model$model,pars=cov.model$pars),n,n)
+    #Sigma <- matrix(getcov(u=u,sigma=exp(etahat[1]),phi=exp(etahat[2]),model=cov.model$model,pars=cov.model$pars),n,n)
+    Sigma <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etahat),n,n)
     covinv <- solve(Sigma)
     cholcovinv <- t(chol(covinv))
     gammahat <- cholcovinv%*%(Yhat-exp(etahat[1])^2/2)  
@@ -163,15 +141,7 @@ proposalvariance.exp.gridded <- function(X,delta,tm,betahat,omegahat,Yhat,priors
     n <- length(tm)
     lenbeta <- length(betahat)
     lenomega <- length(omegahat)
-    if(inherits(cov.model,"covmodel")){
-        leneta <- 2
-    }
-    else if(inherits(cov.model,"function")){
-        leneta <- attr(cov.model,"npar")
-    }
-    else{
-        stop("Unknkown covariance type")
-    }
+    leneta <- getleneta(cov.model)
     lenY <- length(Ygrid)
     npars <- lenbeta + lenomega + leneta + lenY
     
@@ -182,10 +152,14 @@ proposalvariance.exp.gridded <- function(X,delta,tm,betahat,omegahat,Yhat,priors
     # eta
     logpost <- function(eta,tm,delta,X,beta,omega,Ygrid,priors,cov.model,u,control){
         
-        covbase <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),control$Mext,control$Next)
-        rootQeigs <- sqrt(1/Re(fft(covbase)))
+        #covbase <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),control$Mext,control$Next)
+        covbase <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=eta),control$Mext,control$Next)
         
-        gamma <- GammafromY(Ygrid,rootQeigs=rootQeigs,mu=-(exp(eta[1]))^2/2)   
+        rootQeigs <- sqrt(1/Re(fft(covbase)))   
+       
+        pars <- sapply(1:length(eta),function(i){cov.model$itrans[[i]](eta[i])})
+        ymean <- -pars[which(cov.model$parnames=="sigma")]^2/2
+        gamma <- GammafromY(Ygrid,rootQeigs=rootQeigs,mu=ymean)   
                           
         n <- nrow(X)
         Xbeta <- X%*%beta        
@@ -195,27 +169,29 @@ proposalvariance.exp.gridded <- function(X,delta,tm,betahat,omegahat,Yhat,priors
         logpost <- sum(delta*(stuff)-expstuff*tm) + priorcontrib
         return(logpost)
     }
-    ngrid <- 20
-    if(length(priors$etaprior$mean)==1){
-        xseq <- seq(priors$etaprior$mean-1.96*priors$etaprior$sd,priors$etaprior$mean+1.96*priors$etaprior$sd,length.out=ngrid)
-        yseq <- xseq
+    
+    npts <- 20
+    if(leneta>=3){
+        npts <- 10
     }
-    else{
-        xseq <- seq(priors$etaprior$mean[1]-1.96*priors$etaprior$sd[1],priors$etaprior$mean[1]+1.96*priors$etaprior$sd[1],length.out=ngrid)
-        yseq <- seq(priors$etaprior$mean[2]-1.96*priors$etaprior$sd[2],priors$etaprior$mean[2]+1.96*priors$etaprior$sd[2],length.out=ngrid)
-    }
-    qa <- quadapprox(logpost,xseq=xseq,yseq=yseq,tm=tm,delta=delta,X=X,beta=betahat,omega=omegahat,Ygrid=Ygrid,priors=priors,cov.model=cov.model,u=u,control=control)
+    rgs <- getparranges(priors=priors,leneta=leneta)   
+    qa <- QuadApprox(logpost,npts=npts,argRanges=rgs,tm=tm,delta=delta,X=X,beta=betahat,omega=omegahat,Ygrid=Ygrid,priors=priors,cov.model=cov.model,u=u,control=control)    
+    
     matr <- qa$curvature
     etahat <- qa$max
+
+    #matt <- mm; nn <- 30; xseq <- yseq <- seq(-0.01,0.01,length.out=nn); grd <- expand.grid(xseq,yseq); zv <- matrix(apply(grd,1,function(x){t(x)%*%matt%*%t(t(x))}),nn,nn); image.plot(xseq,yseq,zv)    
+    
+    #browser()
     
     # entry for eta in propossal covariance
     sigma[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)] <- matr    
     
     #estimate of gamma
-    covbase <- matrix(getcov(u=u,sigma=exp(etahat[1]),phi=exp(etahat[2]),model=cov.model$model,pars=cov.model$pars),control$Mext,control$Next)
+    covbase <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etahat),control$Mext,control$Next)
     rootQeigs <- sqrt(1/Re(fft(covbase)))
     invrootQeigs <- 1/rootQeigs
-    gammahat <- GammafromY(Ygrid,rootQeigs=rootQeigs,mu=-(exp(etahat[1]))^2/2)     
+    #gammahat <- GammafromY(Ygrid,rootQeigs=rootQeigs,mu=-(exp(etahat[1]))^2/2)     
         
     deriv <- do.call(priors$derivative,args=list(beta=betahat,omega=omegahat,eta=etahat,priors=priors))
 
@@ -259,7 +235,7 @@ proposalvariance.exp.gridded <- function(X,delta,tm,betahat,omegahat,Yhat,priors
     sigmaret[1:(lenbeta+lenomega+leneta),1:(lenbeta+lenomega+leneta)] <- solve(as.matrix(sigma[1:(lenbeta+lenomega+leneta),1:(lenbeta+lenomega+leneta)]))
     sigmaret[matidx] <- 1/sigma[matidx]   
     
-    return(list(etahat=etahat,gammahat=gammahat,sigma=sigmaret)) 
+    return(list(etahat=etahat,sigma=sigmaret)) 
 }
 
 
