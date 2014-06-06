@@ -78,6 +78,7 @@ plotsurv <- function(spp,ss,maxcex=1,background=NULL,eventpt=19,eventcol="red",c
 }
 
 
+
 ##' inference.control function
 ##'
 ##' A function to control inferential settings. 
@@ -96,4 +97,29 @@ inference.control <- function(gridded=FALSE,cellwidth=NULL,ext=2){
     ans$ext <- ext 
     class(ans) <- c("inference.control","list")
     return(ans)
+}
+
+
+
+##' labelomegamatrix function
+##'
+##' A function to label output matrices for the omegavariable
+##'
+##' @param m a matrix 
+##' @param dist distribution function of the baseline hazard
+##' @return a lebelled matrix
+##' @export
+
+labelomegamatrix <- function(m,dist){
+    if(dist=="exp"){
+        pn <- "rate"
+    }
+    else if(dist=="weibull"){
+        pn <- c("shape","scale")
+    }
+    else{
+        stop("Unknown baseline hazard in function labelomegamatrix")    
+    }
+    colnames(m) <- pn
+    return(m)
 }

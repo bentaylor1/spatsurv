@@ -124,16 +124,21 @@ survspat <- function(   formula,
     cat("Calibrating MCMC algorithm and finding initial values ...\n")
     
     
-
+    omegatrans <- NULL
+    omegaitrans <- NULL
     if(dist=="exp"){    
         betahat <- estim[2:length(estim)]
         omegahat <- do.call(paste("transformestimates.",dist,sep=""),args=list(x=exp(estim[1]))) 
         omegahat <- log(omegahat)
+        omegatrans <- log
+        omegaitrans <- exp
     }
     else if(dist=="weibull"){    
         betahat <- estim[3:length(estim)]
         omegahat <- do.call(paste("transformestimates.",dist,sep=""),args=list(x=exp(estim[1:2])))
-        omegahat <- log(omegahat) 
+        omegahat <- log(omegahat)
+        omegatrans <- log
+        omegaitrans <- exp 
     }
     else{
         stop("Unknown dist, must be one of 'exp' or 'weibull'")    
@@ -307,22 +312,43 @@ survspat <- function(   formula,
     #matplot(exp(omegasamp),type="s")
 
     retlist <- list()
-    retlist$formula
-    retlist$data
-    retlist$mcmc.control
-    retlist$betapriormean
-    retlist$betapriorsd
-    retlist$omegapriormean
-    retlist$omegapriorsd
-
-    retlist$terms <- Terms
-    retlist$mlmod <- mlmod    
+    retlist$formula <- formula
+    retlist$data <- data
+    retlist$dist <- dist
+    retlist$cov.model <- cov.model
+    retlist$mcmc.control <- mcmc.control
+    retlist$priors <- priors
+    retlist$control <- control
     
+    retlist$terms <- Terms
+    retlist$mlmod <- mlmod
+    
+    ####
+    #   Back transform for output
+    ####
+    
+    omegasamp <- omegaitrans(omegasamp)
+    itrans <- get(paste("invtransformestimates.",dist,sep=""))
+    if(ncol(omegasamp)==1){    
+        omegasamp <- matrix(apply(omegasamp,1,itrans))
+    }
+    else{
+        omegasamp <- t(apply(omegasamp,1,itrans))
+    }    
+    omegasamp <- labelomegamatrix(m=omegasamp,dist=dist)
+    
+    etasamp <- sapply(1:length(cov.model$itrans),function(i){cov.model$itrans[[i]](etasamp[,i])})
+    colnames(etasamp) <- cov.model$parnames     
+    
+    ####    
+    
+    colnames(betasamp) <- attr(Terms,"term.labels")
     retlist$betasamp <- betasamp
     retlist$omegasamp <- omegasamp
     retlist$etasamp <- etasamp
     retlist$Ysamp <- Ysamp
     
+    retlist$gridded <- control$gridded
     if(control$gridded){
         retlist$M <- Mext/control$ext
         retlist$N <- Next/control$ext
@@ -332,6 +358,9 @@ survspat <- function(   formula,
     
     retlist$tarrec <- tarrec
     retlist$lasth <- h
+    
+    retlist$omegatrans <- omegatrans
+    retlist$omegaitrans <- omegaitrans
     
     retlist$time.taken <- Sys.time() - start
     
