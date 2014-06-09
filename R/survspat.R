@@ -68,6 +68,8 @@ survspat <- function(   formula,
     else{
         u <- as.vector(as.matrix(dist(coords)))
     }
+
+    DATA <- data    
     
     data <- data@data  
                         
@@ -124,21 +126,22 @@ survspat <- function(   formula,
     cat("Calibrating MCMC algorithm and finding initial values ...\n")
     
     
-    omegatrans <- NULL
-    omegaitrans <- NULL
+    
+    trns <- getomegatrans(dist)  
+    
     if(dist=="exp"){    
         betahat <- estim[2:length(estim)]
         omegahat <- do.call(paste("transformestimates.",dist,sep=""),args=list(x=exp(estim[1]))) 
         omegahat <- log(omegahat)
-        omegatrans <- log
-        omegaitrans <- exp
+        omegatrans <- trns$trans
+        omegaitrans <- trns$itrans
     }
     else if(dist=="weibull"){    
         betahat <- estim[3:length(estim)]
         omegahat <- do.call(paste("transformestimates.",dist,sep=""),args=list(x=exp(estim[1:2])))
         omegahat <- log(omegahat)
-        omegatrans <- log
-        omegaitrans <- exp 
+        omegatrans <- trns$trans
+        omegaitrans <- trns$itrans
     }
     else{
         stop("Unknown dist, must be one of 'exp' or 'weibull'")    
@@ -261,8 +264,8 @@ survspat <- function(   formula,
                                 u=u,
                                 control=control)
 
-        revmeanpars <- newstuffpars +  (h/2)*SIGMApars%*%newlogpost$grad[1:(lenbeta+lenomega+leneta)]
-        revmeangamma <- newstuffgamma +  (h/2)*SIGMAgamma*newlogpost$grad[(lenbeta+lenomega+leneta+1):npars]       
+        revmeanpars <- newstuffpars + (h/2)*SIGMApars%*%newlogpost$grad[1:(lenbeta+lenomega+leneta)]
+        revmeangamma <- newstuffgamma + (h/2)*SIGMAgamma*newlogpost$grad[(lenbeta+lenomega+leneta+1):npars]       
 
         revdiffpars <- as.matrix(stuffpars-revmeanpars)
         forwdiffpars <- as.matrix(newstuffpars-propmeanpars)
@@ -313,7 +316,7 @@ survspat <- function(   formula,
 
     retlist <- list()
     retlist$formula <- formula
-    retlist$data <- data
+    retlist$data <- DATA
     retlist$dist <- dist
     retlist$cov.model <- cov.model
     retlist$mcmc.control <- mcmc.control

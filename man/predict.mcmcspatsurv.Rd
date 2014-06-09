@@ -2,22 +2,25 @@
 \alias{predict.mcmcspatsurv}
 \title{predict.mcmcspatsurv function}
 \usage{
-\method{predict}{mcmcspatsurv}(object, newdata = NULL, type = "density",
-  t = NULL, n = 110, probs = c(0.025, 0.5, 0.975), ...)
+\method{predict}{mcmcspatsurv}(object, type = "densityquantile",
+  newdata = NULL, t = NULL, n = 110, probs = c(0.025, 0.5, 0.975),
+  ask = TRUE, ...)
 }
 \arguments{
   \item{object}{an object of class mcmcspatsurv}
 
-  \item{newdata}{X}
+  \item{type}{can be "densityquantile","density", "hazard"
+  or "survival". Default is "densityquantile".}
 
-  \item{type}{can be "density", "hazard" or "survival".
-  Default is "density".}
+  \item{newdata}{X}
 
   \item{t}{X}
 
   \item{n}{X}
 
   \item{probs}{X}
+
+  \item{ask}{X}
 
   \item{...}{other arguments}
 }

@@ -7,7 +7,7 @@ simsurv(X = cbind(age = runif(100, 5, 50), sex = rbinom(100, 1, 0.5), cancer =
   theta = 1, dist = "exp", coords = matrix(runif(2 * nrow(X)), nrow(X),
   2), cov.parameters = c(1, 0.1), cov.model = covmodel(model =
   "exponential", pars = NULL), mcmc.control = mcmcpars(nits = 1e+05, burn =
-  10000, thin = 90), savechains = TRUE)
+  10000, thin = 90), savechains = TRUE, savetype = "expectation")
 }
 \arguments{
   \item{X}{a matrix of covariate information}
@@ -36,6 +36,11 @@ simsurv(X = cbind(age = runif(100, 5, 50), sex = rbinom(100, 1, 0.5), cancer =
   \item{savechains}{save all chains? runs faster if set to
   FALSE, but then you'll be unable to conduct
   convergence/mixing diagnostics}
+
+  \item{savetype}{choices are "expectation" or "last". This
+  is the returned vector of simulated survival times for
+  each individual. "expectation" returns the Monte Carlo
+  mean, "last" the last sampled set of times.}
 }
 \value{
 simulated survival times from the exponential model (the

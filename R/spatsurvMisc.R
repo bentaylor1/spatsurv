@@ -123,3 +123,39 @@ labelomegamatrix <- function(m,dist){
     colnames(m) <- pn
     return(m)
 }
+
+
+
+##' getsurvdata function
+##'
+##' A function to return the survival data from an object of class mcmcspatsurv
+##'
+##' @param x an object of class mcmcspatsurv 
+##' @return the survival data from an object of class mcmcspatsurv
+##' @export
+
+getsurvdata <- function(x){
+    responsename <- as.character(x$formula[[2]])
+    return(x$data[[responsename]])
+}
+
+
+##' getomegatrans function
+##'
+##' A function to return the internal transformation function (and its inverse) for each baseline hazard type. E.g. for an Exponential baseline hazard, we work with the log rate, so log is the transformation function. 
+##'
+##' @param dist the distribution from which the baseline hazard is derived  
+##' @return the transformation and inverse transformation
+##' @export
+
+getomegatrans <- function(dist){
+    retlist <- list()
+    if(dist=="exp" | dist=="weibull"){
+        retlist$trans <- log
+        retlist$itrans <- exp
+    }
+    else{
+        stop("Unknown baseline hazard distribution.")    
+    }
+    return(retlist)
+}

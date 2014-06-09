@@ -13,6 +13,7 @@
 ##' @param cov.model an object of class covmodel, see ?covmodel
 ##' @param mcmc.control mcmc control paramters, see ?mcmcpars
 ##' @param savechains save all chains? runs faster if set to FALSE, but then you'll be unable to conduct convergence/mixing diagnostics
+##' @param savetype choices are "expectation" or "last". This is the returned vector of simulated survival times for each individual. "expectation" returns the Monte Carlo mean, "last" the last sampled set of times.
 ##' @return simulated survival times from the exponential model (the last simulated value from the MCMC chains)
 ##' @seealso \link{covmodel}, \link{survspat} 
 ##' @export
@@ -25,7 +26,8 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
                             cov.parameters=c(1,0.1),
                             cov.model=covmodel(model="exponential",pars=NULL),
                             mcmc.control=mcmcpars(nits=100000,burn=10000,thin=90),      
-                            savechains=TRUE){
+                            savechains=TRUE,
+                            savetype="expectation"){
 
     mcmcloop <- mcmcLoop(N=mcmc.control$nits,burnin=mcmc.control$burn,thin=mcmc.control$thin,progressor=mcmcProgressTextBar)
     
@@ -66,6 +68,9 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
     
     oldltar <- do.call(paste(dist,"_ltar",sep=""),list(t=t,XbetaplusY=XbetaplusY,expXbetaplusY=expXbetaplusY,theta=theta))
     
+    tbar <- rep(0,n)
+    nsamp <- 0
+    
     while(nextStep(mcmcloop)){        
     
         newt <- rexp(n,rate=1/t) 
@@ -80,9 +85,13 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
         oldltar[keepnew] <- newltar[keepnew]
     
         if(is.retain(mcmcloop)){
+            nsamp <- nsamp + 1 # note the purpose of this counter is different to the "count" counter
             if(savechains){        
                 T[count,] <- t
             }
+            
+            tbar <- ((nsamp-1)/nsamp)*tbar + (1/nsamp)*t            
+            
             tarrec[count,] <- oldltar
             acrec[count] <- mean(ac)
             count <- count + 1
@@ -97,10 +106,16 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
         acrec <- acrec[-nmatrows]
     }
     
-    if(savechains){
-        tchoice <- T[nrow(T),]
+    if(savetype=="expectation"){
+        cat("Returning Monte Carlo mean of simulated survival times.\n")
+        tchoice <- tbar
+    }
+    else if(savetype=="last"){
+    cat("Returning last set of simulated survival times.\n")
+        tchoice <- t
     }
     else{
+        warning("Invalid savetype, returning last sampled vlaue of t\n")
         tchoice <- t
     }
     
