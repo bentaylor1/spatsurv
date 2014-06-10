@@ -13,7 +13,6 @@
 ##' @param cov.model an object of class covmodel, see ?covmodel
 ##' @param mcmc.control mcmc control paramters, see ?mcmcpars
 ##' @param savechains save all chains? runs faster if set to FALSE, but then you'll be unable to conduct convergence/mixing diagnostics
-##' @param savetype choices are "expectation" or "last". This is the returned vector of simulated survival times for each individual. "expectation" returns the Monte Carlo mean, "last" the last sampled set of times.
 ##' @return simulated survival times from the exponential model (the last simulated value from the MCMC chains)
 ##' @seealso \link{covmodel}, \link{survspat} 
 ##' @export
@@ -26,8 +25,7 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
                             cov.parameters=c(1,0.1),
                             cov.model=covmodel(model="exponential",pars=NULL),
                             mcmc.control=mcmcpars(nits=100000,burn=10000,thin=90),      
-                            savechains=TRUE,
-                            savetype="expectation"){
+                            savechains=TRUE){
 
     mcmcloop <- mcmcLoop(N=mcmc.control$nits,burnin=mcmc.control$burn,thin=mcmc.control$thin,progressor=mcmcProgressTextBar)
     
@@ -106,18 +104,8 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
         acrec <- acrec[-nmatrows]
     }
     
-    if(savetype=="expectation"){
-        cat("Returning Monte Carlo mean of simulated survival times.\n")
-        tchoice <- tbar
-    }
-    else if(savetype=="last"){
     cat("Returning last set of simulated survival times.\n")
-        tchoice <- t
-    }
-    else{
-        warning("Invalid savetype, returning last sampled vlaue of t\n")
-        tchoice <- t
-    }
+    tchoice <- t
     
     cat("Mean acceptance:",mean(acrec),"\n")
     
