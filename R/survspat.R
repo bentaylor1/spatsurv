@@ -22,7 +22,15 @@ survspat <- function(   formula,
                         mcmc.control,
                         priors,
                         control=inference.control(gridded=FALSE)){
+    
+    # initial checks
+    if(!inherits(data,"SpatialPointsDataFrame")){
+        stop("'data' must be of class 'SpatialPointsDataFrame'.")
+    }                    
+    responsename <- as.character(formula[[2]])
+    checkSurvivalData(data@data[[responsename]])                        
 
+    # okay, start the MCMC!
     start <- Sys.time()
 
     if(!inherits(data,"SpatialPointsDataFrame")){
@@ -182,7 +190,7 @@ survspat <- function(   formula,
     
     npars <- lenbeta + lenomega + leneta + lengamma
     
-    SIGMA[1:(lenbeta+lenomega),1:(lenbeta+lenomega)] <- 0.0001*(1.65^2/((lenbeta+lenomega)^(1/3)))*SIGMA[1:(lenbeta+lenomega),1:(lenbeta+lenomega)]
+    SIGMA[1:(lenbeta+lenomega),1:(lenbeta+lenomega)] <- (1.65^2/((lenbeta+lenomega)^(1/3)))*SIGMA[1:(lenbeta+lenomega),1:(lenbeta+lenomega)]
     SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)] <- 0.4*(2.38^2/leneta)* SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)]
     SIGMA[(lenbeta+lenomega+leneta+1):(lenbeta+lenomega+leneta+lengamma),(lenbeta+lenomega+leneta+1):(lenbeta+lenomega+leneta+lengamma)] <- (1.65^2/(lengamma^(1/3)))*SIGMA[(lenbeta+lenomega+leneta+1):(lenbeta+lenomega+leneta+lengamma),(lenbeta+lenomega+leneta+1):(lenbeta+lenomega+leneta+lengamma)]   
     

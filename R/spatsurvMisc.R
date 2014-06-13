@@ -159,3 +159,29 @@ getomegatrans <- function(dist){
     }
     return(retlist)
 }
+
+
+
+
+##' checkSurvivalData function
+##'
+##' A function to check whether the survival data to be passed to survspat is in the correct format
+##'
+##' @param s an object of class Surv, from the survival package 
+##' @return if there are any issues with data format, these are returned with the data an error message explaining any issues with the data
+##' @export
+
+checkSurvivalData <- function(s){
+    if(class(s)!="Surv"){
+        stop("Survival data must be of class 'Surv', see ?Surv")
+    }
+    
+    if(attr(s,"type")=="right" | attr(s,"type")=="left" | attr(s,"type")=="interval"){
+        if(any(as.matrix(s)<0,na.rm=TRUE)){
+            stop("Survival data must not contain negative times, please change the offset of your data so that all times are non-negative")
+        }    
+    }
+    else{
+        stop("Survival data must be of type 'left', 'right', or 'interval', see ?Surv")
+    }
+}
