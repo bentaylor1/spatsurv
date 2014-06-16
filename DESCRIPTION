@@ -2,7 +2,7 @@ Package: spatsurv
 Type: Package
 Title: Bayesian spatial survival analysis with parametric proportional hazards
     models.
-Version: 0.9-3
+Version: 0.9-4
 Date: 2013-12-12
 Author: Benjamin M. Taylor and Barry S. Rowlingson
 Maintainer: Benjamin M. Taylor <b.taylor1@lancaster.ac.uk>
