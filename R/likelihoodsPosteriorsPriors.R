@@ -136,11 +136,14 @@ logposterior.exp <- function(tm,delta,X,beta,omega,eta,gamma,priors,cov.model,u,
     
     cholsigma <- t(chol(sigma))
     priorcontrib <- -(1/2)*sum(gamma^2) + do.call(priors$call,args=list(beta=beta,omega=omega,eta=eta,priors=priors))
-    Y <- -eta[1]^2/2 + cholsigma%*%gamma
+    MU <- -cov.model$itrans[[control$sigmaidx]](eta[control$sigmaidx])^2/2
+    Y <- MU + cholsigma%*%gamma
     stuff <- Xbeta + Y + omega
     expstuff <- exp(stuff)
 
     logpost <- sum(delta*(stuff)-expstuff*tm) + priorcontrib
+    
+    #browser()
     
     grad <- rep(0,length(beta)+length(omega)+length(eta)+length(gamma))
 
@@ -270,7 +273,8 @@ logposterior.weibull <- function(tm,delta,X,beta,omega,eta,gamma,priors,cov.mode
     
     cholsigma <- t(chol(sigma))
     priorcontrib <- -(1/2)*sum(gamma^2) + do.call(priors$call,args=list(beta=beta,omega=omega,eta=eta,priors=priors))
-    Y <- -eta[1]^2/2 + cholsigma%*%gamma
+    MU <- -cov.model$itrans[[control$sigmaidx]](eta[control$sigmaidx])^2/2
+    Y <- MU + cholsigma%*%gamma
     stuff <- Xbeta + Y
     expstuff <- exp(stuff)
 

@@ -39,6 +39,7 @@ survspat <- function(   formula,
     
     coords <- coordinates(data)
 
+    control$dist <- dist
     funtxt <- ""    
     if(control$gridded){
         funtxt <- ".gridded"
@@ -155,6 +156,14 @@ survspat <- function(   formula,
         stop("Unknown dist, must be one of 'exp' or 'weibull'")    
     }
     
+    control$omegatrans <- omegatrans
+    control$omegaitrans <- omegaitrans
+    
+    control$sigmaidx <- match("sigma",cov.model$parnames)
+    if(is.na(control$sigmaidx)){
+        stop("At least one of the parameters must be the variance of Y, it should be named sigma")
+    }
+    
     Yhat <- do.call(paste("estimateY.",dist,sep=""),args=list(X=X,betahat=betahat,omegahat=omegahat,tm=tm,delta=delta))    
        
     other <- do.call(paste("proposalvariance.",dist,funtxt,sep=""),args=list(   X=X,
@@ -168,7 +177,7 @@ survspat <- function(   formula,
                                                                                 u=u,
                                                                                 control=control)) 
     
-    gammahat <- other$gammahat
+    #gammahat <- other$gammahat
     etahat <- other$etahat                                                                        
     SIGMA <- other$sigma 
 
@@ -176,7 +185,7 @@ survspat <- function(   formula,
     omega <- omegahat
     eta <- etahat 
  
-    gamma <- rep(0,length(gammahat))
+    gamma <- rep(0,nrow(X))
     if(control$gridded){
         gamma <- matrix(0,control$Mext,control$Next)
     }

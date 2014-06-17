@@ -55,10 +55,10 @@ proposalvariance.exp <- function(X,delta,tm,betahat,omegahat,Yhat,priors,cov.mod
     
     # eta
     logpost <- function(eta,tm,delta,X,beta,omega,Y,priors,cov.model,u){
-        #sigmainv <- solve(matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),n,n))
         sigmainv <- solve(matrix(EvalCov(cov.model=cov.model,u=u,parameters=eta),n,n))
         cholsigmainv <- t(chol(sigmainv))
-        gamma <- cholsigmainv%*%(Y-exp(eta[1])^2/2)                    
+        MU <- -cov.model$itrans[[control$sigmaidx]](eta[control$sigmaidx])^2/2
+        gamma <- cholsigmainv%*%(Y-MU)                    
         n <- nrow(X)
         Xbeta <- X%*%beta        
         priorcontrib <- -(1/2)*sum(gamma^2) + do.call(priors$call,args=list(beta=beta,omega=omega,eta=eta,priors=priors))
@@ -82,15 +82,11 @@ proposalvariance.exp <- function(X,delta,tm,betahat,omegahat,Yhat,priors,cov.mod
     sigma[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)] <- matr    
     
     #estimate of gamma
-    #Sigma <- matrix(getcov(u=u,sigma=exp(etahat[1]),phi=exp(etahat[2]),model=cov.model$model,pars=cov.model$pars),n,n)
     Sigma <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etahat),n,n)
     covinv <- solve(Sigma)
     cholcovinv <- t(chol(covinv))
-    gammahat <- cholcovinv%*%(Yhat-exp(etahat[1])^2/2)  
     
     cholSigma <- t(chol(Sigma))    
-    #mu <- -sd(gammahat)^2/2
-    #Y <- mu + cholSigma%*%gammahat
     
     deriv <- do.call(priors$derivative,args=list(beta=betahat,omega=omegahat,eta=etahat,priors=priors))
 
@@ -112,7 +108,7 @@ proposalvariance.exp <- function(X,delta,tm,betahat,omegahat,Yhat,priors,cov.mod
     # gamma
     diag(sigma)[(lenbeta+lenomega+leneta+1):npars] <- -sum((diag(cholSigma)^2)%*%(thing*tm)) - 1  # -1 comes from prior  
     
-    return(list(etahat=etahat,gammahat=gammahat,sigma=solve(-sigma))) 
+    return(list(etahat=etahat,sigma=solve(-sigma))) 
 }
 
 

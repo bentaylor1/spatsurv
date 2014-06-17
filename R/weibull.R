@@ -68,20 +68,18 @@ proposalvariance.weibull <- function(X,delta,tm,betahat,omegahat,Yhat,priors,cov
     
     # eta
     logpost <- function(eta,tm,delta,X,beta,omega,Y,priors,cov.model,u){
-        #sigmainv <- solve(matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),n,n))
         sigmainv <- solve(matrix(EvalCov(cov.model=cov.model,u=u,parameters=eta),n,n))
         cholsigmainv <- t(chol(sigmainv))
-        gamma <- cholsigmainv%*%(Y-exp(eta[1])^2/2)                    
+        MU <- -cov.model$itrans[[control$sigmaidx]](eta[control$sigmaidx])^2/2
+        gamma <- cholsigmainv%*%(Y-MU)                    
         
         alpha <- exp(omega[1])
         lambda <- exp(omega[2])
     
         n <- nrow(X)
         Xbeta <- X%*%beta
-        #sigma <- matrix(getcov(u=u,sigma=exp(eta[1]),phi=exp(eta[2]),model=cov.model$model,pars=cov.model$pars),n,n)
-        #cholsigma <- t(chol(sigma))
+        
         priorcontrib <- -(1/2)*sum(gamma^2) + do.call(priors$call,args=list(beta=beta,omega=omega,eta=eta,priors=priors))
-        #Y <- -eta[1]^2/2 + cholsigma%*%gamma
         stuff <- Xbeta + Y
         expstuff <- exp(stuff)
     
@@ -104,15 +102,12 @@ proposalvariance.weibull <- function(X,delta,tm,betahat,omegahat,Yhat,priors,cov
     sigma[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)] <- matr    
     
     #estimate of gamma
-    #Sigma <- matrix(getcov(u=u,sigma=exp(etahat[1]),phi=exp(etahat[2]),model=cov.model$model,pars=cov.model$pars),n,n)
     Sigma <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etahat),n,n)
     covinv <- solve(Sigma)
     cholcovinv <- t(chol(covinv))
-    gammahat <- cholcovinv%*%(Yhat-exp(etahat[1])^2/2)  
     
     cholSigma <- t(chol(Sigma))    
-    #mu <- -sd(gammahat)^2/2
-    #Y <- mu + cholSigma%*%gammahat
+
     
     deriv <- do.call(priors$derivative,args=list(beta=betahat,omega=omegahat,eta=etahat,priors=priors))
 
@@ -146,7 +141,7 @@ proposalvariance.weibull <- function(X,delta,tm,betahat,omegahat,Yhat,priors,cov
     # gamma
     diag(sigma)[(lenbeta+lenomega+leneta+1):npars] <- -sum((diag(cholSigma)^2)*(thing*lambdahat*tm^alphahat)) - 1 # -1 comes from prior 
     
-    return(list(etahat=etahat,gammahat=gammahat,sigma=solve(-sigma))) 
+    return(list(etahat=etahat,sigma=solve(-sigma))) 
 }
 
 
