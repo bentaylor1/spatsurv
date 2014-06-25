@@ -127,3 +127,25 @@ hesscumbasehazard.exp <- function(pars){
     }
     return(fun)
 }
+
+
+
+#################################################################################
+
+
+
+##' densityquantile.exp function
+##'
+##' A function to 
+##'
+##' @param pars X 
+##' @param other X
+##' @return ...
+##' @export
+
+densityquantile.exp <- function(pars,other){
+    fun <- function(probs){
+        return(-log(1-probs)/(pars*other$expXbetaplusY))
+    }
+    return(fun)    
+}

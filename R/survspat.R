@@ -167,7 +167,6 @@ survspat <- function(   formula,
         stop("At least one of the parameters must be the variance of Y, it should be named sigma")
     }
     
-    #Yhat <- do.call(paste("estimateY.",dist,sep=""),args=list(X=X,betahat=betahat,omegahat=omegahat,tm=tm,delta=delta))
     Yhat <- estimateY(  X=X,
                         betahat=betahat,
                         omegahat=omegahat,
@@ -378,6 +377,8 @@ survspat <- function(   formula,
     retlist$omegasamp <- omegasamp
     retlist$etasamp <- etasamp
     retlist$Ysamp <- Ysamp
+    
+    retlist$survivaldata <- survivaldata
     
     retlist$gridded <- control$gridded
     if(control$gridded){

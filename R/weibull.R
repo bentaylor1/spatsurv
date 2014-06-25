@@ -162,3 +162,25 @@ hesscumbasehazard.weibull <- function(pars){
     }
     return(fun)
 }
+
+
+
+#################################################################################
+
+
+
+##' densityquantile.weibull function
+##'
+##' A function to 
+##'
+##' @param pars X 
+##' @param other X
+##' @return ...
+##' @export
+
+densityquantile.weibull <- function(pars,other){
+    fun <- function(probs){
+        return((-log(1-probs)/(pars[2]*other$expXbetaplusY))^(1/pars[1]))
+    }
+    return(fun)    
+}
