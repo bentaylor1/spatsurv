@@ -24,10 +24,60 @@ invtransformestimates.exp <- function(x){
 
 
 
+##' getomegatrans.exp function
+##'
+##' A function to return the internal transformation function (and its inverse) for the baseline hazard type. E.g. for an Exponential baseline hazard, we work with the log rate, so log is the transformation function. 
+##' 
+##' @return the transformation and inverse transformation, jacobian and hessian
+##' @export
+
+getomegatrans.exp <- function(){
+    retlist <- list()
+    retlist$trans <- log
+    retlist$itrans <- exp
+    retlist$jacobian <- exp
+    retlist$hessian <- list(exp)
+    return(retlist)
+}
+
+
+
+##' labelomegamatrix.exp function
+##'
+##' A function to label output matrices for the omegavariable
+##'
+##' @param m a matrix 
+##' @param dist distribution function of the baseline hazard
+##' @return a lebelled matrix
+##' @export
+
+labelomegamatrix.exp <- function(m,dist){
+    pn <- "rate"
+    colnames(m) <- pn
+    return(m)
+}
+
+
+##' distinfo.exp function
+##'
+##' A function to 
+##'
+##' @return ...
+##' @export
+
+distinfo.exp <- function(){
+    ans <- list()
+    ans$npars <- 1
+    ans$parnames <- "rate"
+    return(ans)
+}
+
 
 #################################################################################
 # exponential survival model
 #################################################################################
+
+
 
 ##' basehazard.exp function
 ##'
@@ -127,6 +177,8 @@ hesscumbasehazard.exp <- function(pars){
     }
     return(fun)
 }
+
+
 
 
 

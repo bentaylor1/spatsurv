@@ -43,7 +43,9 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
  
     XbetaplusY <- X%*%beta + Y
     expXbetaplusY <- exp(XbetaplusY)
-    #rexpXbeta <- rate*expXbeta
+    
+    h <- get(paste("basehazard.",dist,sep=""))(theta)    
+    H <- get(paste("cumbasehazard.",dist,sep=""))(theta)
     
     nmatrows <- ceiling((mcmc.control$nits-mcmc.control$burn-mcmcloop$waste)/mcmc.control$thin)
     
@@ -64,7 +66,8 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
         t <- rweibull(n,shape=theta[1],scale=theta[2])
     }
     
-    oldltar <- do.call(paste(dist,"_ltar",sep=""),list(t=t,XbetaplusY=XbetaplusY,expXbetaplusY=expXbetaplusY,theta=theta))
+    
+    oldltar <- XbetaplusY + log(h(t)) - expXbetaplusY*H(t) 
     
     tbar <- rep(0,n)
     nsamp <- 0
@@ -72,7 +75,7 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
     while(nextStep(mcmcloop)){        
     
         newt <- rexp(n,rate=1/t) 
-        newltar <- do.call(paste(dist,"_ltar",sep=""),list(t=newt,XbetaplusY=XbetaplusY,expXbetaplusY=expXbetaplusY,theta=theta))
+        newltar <- XbetaplusY + log(h(newt)) - expXbetaplusY*H(newt)
         
         frac <- exp(newltar-oldltar+dexp(t,1/newt,log=TRUE)-dexp(newt,1/t,log=TRUE))        
         

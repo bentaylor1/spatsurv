@@ -78,3 +78,52 @@ etapriorGauss <- function(mean,sd){
     class(retlist) <- "etapriorGauss"
     return(retlist) 
 }
+
+
+##' logindepnormalprior function
+##'
+##' A function to evaluate the log prior for independent normals
+##'
+##' @param beta parameter beta at which prior is to be evaluated 
+##' @param omega parameter omega at which prior is to be evaluated
+##' @param betapriormean prior mean for beta 
+##' @param betapriorsd prior standard deviation for beta
+##' @param omegapriormean prior mean fpr omega 
+##' @param omegapriorsd prior standard deviation for omega 
+##' @return the log prior
+##' @export
+
+logindepnormalprior <- function(beta,omega,betapriormean,betapriorsd,omegapriormean,omegapriorsd){
+    return(sum(dnorm(beta,betapriormean,betapriorsd,log=TRUE))+sum(dnorm(omega,omegapriormean,omegapriorsd,log=TRUE)))
+}
+
+
+
+##' logindepGaussianprior function
+##'
+##' A function to evaluate the log prior for independent normals
+##'
+##' @param beta parameter beta at which prior is to be evaluated 
+##' @param omega parameter omega at which prior is to be evaluated
+##' @param eta parameter eta at which prior is to be evaluated
+##' @param priors an object of class mcmcPriors, see ?mcmcPriors
+##' @return the log prior
+##' @export
+
+logindepGaussianprior <- function(beta=NULL,omega=NULL,eta=NULL,priors){
+    
+    lp <- 0
+    if(!is.null(priors$betaprior)){
+        lp <- lp + sum(dnorm(beta,priors$betaprior$mean,priors$betaprior$sd,log=TRUE))
+    }
+
+    if(!is.null(priors$omegaprior)){
+        lp <- lp + sum(dnorm(omega,priors$omegaprior$mean,priors$omegaprior$sd,log=TRUE))
+    }
+    
+    if(!is.null(priors$etaprior)){
+        lp <- lp + sum(dnorm(eta,priors$etaprior$mean,priors$etaprior$sd,log=TRUE))
+    }
+    
+    return(lp)
+}

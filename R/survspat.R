@@ -137,7 +137,7 @@ survspat <- function(   formula,
     
     
     
-    trns <- getomegatrans(dist)  
+    trns <- get(paste("getomegatrans.",dist,sep=""))()  
     
     if(dist=="exp"){    
         betahat <- estim[2:length(estim)]
@@ -365,7 +365,7 @@ survspat <- function(   formula,
     else{
         omegasamp <- t(apply(omegasamp,1,itrans))
     }    
-    omegasamp <- labelomegamatrix(m=omegasamp,dist=dist)
+    omegasamp <- get(paste("labelomegamatrix.",dist,sep=""))(m=omegasamp,dist=dist)
     
     etasamp <- sapply(1:length(cov.model$itrans),function(i){cov.model$itrans[[i]](etasamp[,i])})
     colnames(etasamp) <- cov.model$parnames     

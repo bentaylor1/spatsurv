@@ -40,6 +40,58 @@ invtransformestimates.weibull <- function(x){
 
 
 
+##' getomegatrans.weibull function
+##'
+##' A function to return the internal transformation function (and its inverse) for the baseline hazard type. E.g. for an Exponential baseline hazard, we work with the log rate, so log is the transformation function. 
+##' 
+##' @return the transformation and inverse transformation, jacobian and hessian
+##' @export
+
+getomegatrans.weibull <- function(){
+    retlist <- list()
+    retlist$trans <- log
+    retlist$itrans <- exp
+    retlist$jacobian <- exp
+    retlist$hessian <- list(exp,exp)
+    return(retlist)
+}
+
+
+
+
+##' labelomegamatrix.weibull function
+##'
+##' A function to label output matrices for the omegavariable
+##'
+##' @param m a matrix 
+##' @param dist distribution function of the baseline hazard
+##' @return a lebelled matrix
+##' @export
+
+labelomegamatrix.weibull <- function(m,dist){
+    pn <- c("shape","scale")
+    colnames(m) <- pn
+    return(m)
+}
+
+
+
+##' distinfo.weibull function
+##'
+##' A function to 
+##'
+##' @return ...
+##' @export
+
+distinfo.weibull <- function(){
+    ans <- list()
+    ans$npars <- 2
+    ans$parnames <- c("alpha","lambda")
+    return(ans)
+}
+
+
+
 #################################################################################
 # Weibull survival model
 #################################################################################

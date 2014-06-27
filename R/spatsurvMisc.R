@@ -43,6 +43,7 @@ gensens <- function(survtimes,censtimes){
 ##' @param spp A spatial points data frame
 ##' @param ss A Surv object (with right-censoring) 
 ##' @param maxcex maximum size of dots default is equavalent to setting cex equal to 1
+##' @param transform optional transformation to apply to the data, a function, for example 'sqrt'
 ##' @param background a background object to plot default is null, which gives a blamk background note that if non-null, the parameters xlim and ylim will be derived from this object.
 ##' @param eventpt The type of point to illustrate events, default is 19 (see ?pch) 
 ##' @param eventcol the colour of events, default is black
@@ -50,12 +51,13 @@ gensens <- function(survtimes,censtimes){
 ##' @param censcol the colour of censored observations, default is red
 ##' @param xlim optional x-limits of plot, default is to choose this automatically 
 ##' @param ylim optional y-limits of plot, default is to choose this automatically
-
+##' @param xlab label for x-axis
+##' @param ylablabel for y-axis
 ##' @param ... other arguments to pass to plot
 ##' @return Plots the survival data non-censored observations appear as dots and censored observations as crosses. The size of the dot is proportional to the observed time.
 ##' @export
 
-plotsurv <- function(spp,ss,maxcex=1,background=NULL,eventpt=19,eventcol="red",censpt="+",censcol="black",xlim=NULL,ylim=NULL,...){
+plotsurv <- function(spp,ss,maxcex=1,transform=identity,background=NULL,eventpt=19,eventcol="red",censpt="+",censcol="black",xlim=NULL,ylim=NULL,xlab=NULL,ylab=NULL,...){
     crds <- coordinates(spp)
     if(is.null(xlim)){
         if(is.null(background)){
@@ -67,11 +69,21 @@ plotsurv <- function(spp,ss,maxcex=1,background=NULL,eventpt=19,eventcol="red",c
             ylim <- range(crds[,2])
         }
     }
+    
+    if(is.null(xlab)){
+        xlab <- "x-coordinates"
+    }
+    if(is.null(ylab)){
+        ylab <- "y-coordinates"
+    }
+    
+    stimes <- ss[,"time"]
+    stimes <- transform(stimes)
 
     event <- ss[,"status"] == 1 # event indicator
-    cexx <- maxcex* ss[,"time"] / max(ss[,"time"])    
+    cexx <- maxcex* stimes / max(stimes)    
     
-    plot(background,xlim=xlim,ylim=ylim,...)
+    plot(background,xlim=xlim,ylim=ylim,xlab=xlab,ylab=ylab,...)
     points(crds[event,],pch=eventpt,col=eventcol,cex=cexx[event])
     points(crds[!event,],pch=censpt,col=censcol,cex=cexx[!event])
     
@@ -101,29 +113,6 @@ inference.control <- function(gridded=FALSE,cellwidth=NULL,ext=2){
 
 
 
-##' labelomegamatrix function
-##'
-##' A function to label output matrices for the omegavariable
-##'
-##' @param m a matrix 
-##' @param dist distribution function of the baseline hazard
-##' @return a lebelled matrix
-##' @export
-
-labelomegamatrix <- function(m,dist){
-    if(dist=="exp"){
-        pn <- "rate"
-    }
-    else if(dist=="weibull"){
-        pn <- c("shape","scale")
-    }
-    else{
-        stop("Unknown baseline hazard in function labelomegamatrix")    
-    }
-    colnames(m) <- pn
-    return(m)
-}
-
 
 
 ##' getsurvdata function
@@ -140,32 +129,7 @@ getsurvdata <- function(x){
 }
 
 
-##' getomegatrans function
-##'
-##' A function to return the internal transformation function (and its inverse) for each baseline hazard type. E.g. for an Exponential baseline hazard, we work with the log rate, so log is the transformation function. 
-##'
-##' @param dist the distribution from which the baseline hazard is derived  
-##' @return the transformation and inverse transformation
-##' @export
 
-getomegatrans <- function(dist){
-    retlist <- list()
-    if(dist=="exp" | dist=="weibull"){
-        retlist$trans <- log
-        retlist$itrans <- exp
-        retlist$jacobian <- exp
-        if(dist=="exp"){
-            retlist$hessian <- list(exp)
-        }
-        if(dist=="weibull"){
-            retlist$hessian <- list(exp,exp)  
-        }
-    }
-    else{
-        stop("Unknown baseline hazard distribution.")    
-    }
-    return(retlist)
-}
 
 
 
