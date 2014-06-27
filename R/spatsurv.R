@@ -31,7 +31,6 @@
 ##'
 ##'
 ##' @import survival
-##' @import flexsurv
 ##' @import sp
 ##' @importFrom Matrix Matrix
 ##' @importFrom Matrix nearPD 

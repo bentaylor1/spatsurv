@@ -43,7 +43,7 @@ print.mcmcspatsurv <- function(x,probs=c(0.5,0.025,0.975),digits = 3, scientific
 ##' @return ...
 ##' @export
 
-quantile.mcmcspatsurv <- function(x,probs,...){
+quantile.mcmcspatsurv <- function(x,probs=c(0.025,0.5,0.975),...){
     m1 <- t(apply(x$betasamp,2,quantile,probs=probs))
     m2 <- t(apply(x$omegasamp,2,quantile,probs=probs))
     m3 <- t(apply(x$etasamp,2,quantile,probs=probs))
@@ -156,17 +156,11 @@ randompars <- function(x){
 ##' @export
 
 baselinehazard <- function(x,t=NULL,n=100,probs=c(0.025,0.5,0.975),plot=TRUE){
-    # extract and transform onto appropriate scale    
-    transfun <- get(paste("transformestimates.",x$dist,sep=""))
-    if(ncol(x$omegasamp)==1){    
-        omegasamp <- matrix(apply(x$omegasamp,1,transfun))
-    }
-    else{
-        omegasamp <- t(apply(x$omegasamp,1,transfun))
-    }    
+
+    omegasamp <- x$omegasamp   
     
     if(is.null(t)){
-        t <- seq(0,max(x$mlmod$data$Y[,"time"]),length.out=n)
+        t <- seq(0,max(x$survivaldata[,"time"]),length.out=n)
     }
     
     fun <- function(pars){
@@ -333,15 +327,16 @@ densityquantile_PP <- function(inputs){
 ##' @param t X
 ##' @param n X
 ##' @param probs X
-##' @param ask X
+##' @param plot X
+##' @param pause X
 ##' @param ... other arguments 
 ##' @return ...
 ##' @export
 
-predict.mcmcspatsurv <- function(object,type="densityquantile",newdata=NULL,t=NULL,n=110,probs=c(0.025,0.5,0.975),ask=TRUE,...){
+predict.mcmcspatsurv <- function(object,type="densityquantile",newdata=NULL,t=NULL,n=110,probs=c(0.025,0.5,0.975),plot=TRUE,pause=TRUE,...){
 
     if(is.null(newdata)){
-        newdata <- object$mlmod$data$X
+        newdata <- object$X
     }
     
     nobs <- nrow(newdata)
@@ -366,20 +361,8 @@ predict.mcmcspatsurv <- function(object,type="densityquantile",newdata=NULL,t=NU
     
     
     nits <- nrow(object$Ysamp)
-
-        
-    if(type!="densityquantile" | type!="Et"){
-        par(ask=ask)
-    }
     
-    transfun <- get(paste("transformestimates.",object$dist,sep=""))
-    if(ncol(object$omegasamp)==1){    
-        omegasamp <- matrix(apply(object$omegasamp,1,transfun))
-    }
-    else{
-        omegasamp <- t(apply(object$omegasamp,1,transfun))
-    }
-        
+    omegasamp <- object$omegasamp    
     dat <- matrix(NA,nits,n)
     for(i in 1:nobs){
         if(type!="Et"){
@@ -401,10 +384,14 @@ predict.mcmcspatsurv <- function(object,type="densityquantile",newdata=NULL,t=NU
             }      
         }
 
-        if(type!="densityquantile" & type!="Et"){            
+        if(type!="densityquantile" & type!="Et"){          
             toplot <- t(apply(dat,2,quantile,probs=probs))        
             matplot(t,toplot,type="l",col=c("purple","black","blue"),lty=c("dashed","solid","dashed"),xlab="time",ylab=type,main=paste("Individual",i))
             legend("topright",lty=c("dashed","solid","dashed"),col=rev(c("purple","black","blue")),legend=rev(probs))
+            if(pause){
+                cat("[press [enter] to continue]")
+                ob <- scan(n=1,quiet=TRUE)
+            }
         }
         else{        
             setTxtProgressBar(pb,i)
@@ -445,6 +432,9 @@ predict.mcmcspatsurv <- function(object,type="densityquantile",newdata=NULL,t=NU
 ##' @export
 
 plot.mcmcspatsurv <- function(x,n=1000,pr=NULL,alpha=0.05,...){
+
+    warning("This function is currently being de-bugged.",immediate.=TRUE)
+
     survdat <- getsurvdata(x)
     times <- survdat[,"time"]
     cens <- survdat[,"status"]
@@ -492,12 +482,10 @@ plot.mcmcspatsurv <- function(x,n=1000,pr=NULL,alpha=0.05,...){
 
 
 
-priorposterior <- function(x,breaks=30,ylab="Density",main="",ask=TRUE,...){
+priorposterior <- function(x,breaks=30,ylab="Density",main="",pause=TRUE,...){
     nbeta <- ncol(x$betasamp)
     nomega <- ncol(x$omegasamp)
     neta <- ncol(x$etasamp)
-    
-    par(ask=ask)
     
     for(i in 1:nbeta){
         h <- hist(x$betasamp[,i],ylab=ylab,xlab=colnames(x$betasamp)[i],breaks=breaks,freq=FALSE,main=main,...)
@@ -509,17 +497,15 @@ priorposterior <- function(x,breaks=30,ylab="Density",main="",ask=TRUE,...){
         else{
             lines(r,dnorm(r,mean=x$priors$betaprior$mean[i],sd=x$priors$betaprior$sd[i]),col="red",lwd=2)
         }
+        
+        if(pause){
+            cat("[press [enter] to continue]")
+            scan(n=1,quiet=TRUE)
+        }
     }
     
-    
-    
-    transfun <- get(paste("transformestimates.",x$dist,sep=""))
-    if(ncol(x$omegasamp)==1){    
-        samp <- matrix(apply(x$omegasamp,1,transfun))
-    }
-    else{
-        samp <- t(apply(x$omegasamp,1,transfun))
-    }
+      
+    samp <- x$omegasamp
     samp <- x$omegatrans(samp)
     for(i in 1:nomega){        
         h <- hist(samp[,i],ylab=ylab,xlab=paste("Transformed",colnames(x$omegasamp)[i]),breaks=breaks,freq=FALSE,main=main,...)
@@ -530,6 +516,11 @@ priorposterior <- function(x,breaks=30,ylab="Density",main="",ask=TRUE,...){
         }
         else{
             lines(r,dnorm(r,mean=x$priors$omegaprior$mean[i],sd=x$priors$omegaprior$sd[i]),col="red",lwd=2)
+        }
+        
+        if(pause){
+            cat("[press [enter] to continue]")
+            scan(n=1,quiet=TRUE)
         }
     }
     
@@ -545,6 +536,11 @@ priorposterior <- function(x,breaks=30,ylab="Density",main="",ask=TRUE,...){
         }
         else{
             lines(r,dnorm(r,mean=x$priors$etaprior$mean[i],sd=x$priors$etaprior$sd[i]),col="red",lwd=2)
+        }
+        
+        if(pause){
+            cat("[press [enter] to continue]")
+            scan(n=1,quiet=TRUE)
         }
     }
 }
@@ -580,4 +576,126 @@ posteriorcov <- function(x,probs=c(0.025,0.5,0.975),rmax=NULL,n=100,...){
     qts <- t(apply(covs,2,quantile,probs=probs))
     
     matplot(r,qts,type="l",xlab="Distance",ylab="Covariance",...)
+}
+
+
+
+##' spatialpredict function
+##'
+##' A function to 
+##'
+##' @param object X 
+##' @param xgrid X 
+##' @param ygrid X 
+##' @param cellwidth X 
+##' @return ...
+##' @export
+
+spatialpredict <- function(object,xgrid=NULL,ygrid=NULL,cellwidth=NULL){
+
+    if(is.null(xgrid)&is.null(ygrid)){
+        if(is.null(cellwidth)){
+            stop("You must specify cellwidth or xgrid and ygrid")
+        }
+        grid <- FFTgrid(spatialdata=object$data,cellwidth=cellwidth,ext=1)
+        xgrid <- grid$mcens
+        ygrid <- grid$ncens  
+    }
+
+    gr <- as.matrix(expand.grid(xgrid,ygrid))
+    crds <- rbind(gr,coordinates(object$data))
+    
+    n <- nrow(object$X)
+    N <- nrow(gr)    
+    mx <- nrow(crds)
+    
+    u <- as.vector(as.matrix(dist(crds)))
+    
+    nits <- nrow(object$Ysamp)
+    
+    etasamp <- sapply(1:length(object$cov.model$trans),function(i){object$cov.model$trans[[i]](object$etasamp[,i])})
+    
+    predY <- NULL
+    
+    Y <- colMeans(object$Ysamp)
+    eta <- colMeans(object$etasamp)
+    
+    mu_22 <- -object$cov.model$itrans[[object$control$sigmaidx]](eta[object$control$sigmaidx])^2/2                    
+    
+    sigma <- matrix(EvalCov(cov.model=object$cov.model,u=u,parameters=eta),mx,mx)
+   
+    sigma_12 <- sigma[1:N,(N+1):mx]
+    sigma_22inv <- solve(sigma[(N+1):mx,(N+1):mx])
+ 
+    predY <- matrix(sigma_12%*%sigma_22inv%*%(Y-mu_22),length(xgrid),length(ygrid))
+    
+    return(list(xgrid=xgrid,ygrid=ygrid,predY=predY))
+}
+
+
+##' makegreycale function
+##'
+##' A function to 
+##'
+##' @param v X 
+##' @return ...
+##' @export
+
+makegreyscale <- function(v){
+    v <- v-min(v,na.rm=TRUE) # smallest v now zero
+    v <- v / max(v,na.rm=TRUE)
+    return(grey(1-v))
+}
+
+
+
+##' MCE function
+##'
+##' A function to 
+##'
+##' @param object X 
+##' @param fun X 
+##' @return ...
+##' @export
+
+MCE <- function(object,fun){
+    nits <- nrow(object$betasamp)
+    
+    result <- lapply(1:nits,function(i){fun(beta=object$betasamp[i,],omega=object$omegasamp[i,],eta=object$etasamp[i,],Y=object$Ysamp[i,])})
+    
+    return((1/nits)*Reduce('+',result))
+}
+
+
+
+
+##' hazardexceedance function
+##'
+##' A function to 
+##'
+##' @param threshold X 
+##' @param direction X 
+##' @return ...
+##' @export
+
+hazardexceedance <- function(threshold,direction="upper"){
+    fun <- function(beta,omega,eta,Y){
+        EY <- exp(Y)
+        d <- length(Y)
+        len <- length(threshold)
+        A <- matrix(NA,len,d)
+        
+        for(i in 1:len){
+            if(direction=="upper"){
+                A[i,] <- as.numeric(EY>threshold[i])
+            }
+            else{
+                A[i,] <- as.numeric(EY<threshold[i])
+            }
+        }
+        return(A)        
+    }
+    attr(fun,"threshold") <- threshold
+    attr(fun,"direction") <- direction
+    return(fun)
 }

@@ -1,54 +1,14 @@
-##' transformestimates.weibull function
-##'
-##' A function to transform estimates of the parameters of the weibull baseline hazard function, so they are commensurate with R's inbuilt density functions.
-##'
-##' @param x a vector of paramters
-##' @return the transformed parameters. For the weibull model, this transforms 'shape' 'scale' (see ?dweibull) to 'alpha' and 'lambda' for the MCMC
-##' @export
-transformestimates.weibull <- function(x){
-    a <- x[1] # shape
-    b <- x[2] # scale
-    alpha <- a
-    lambda <- (1/b)^a
-
-    ans <- c(alpha=alpha,lambda=lambda) # note this is logged later for use in the MCMC
-    
-    return(ans)
-}
-
-
-
-##' invtransformestimates.weibull function
-##'
-##' A function to transform estimates of the parameters of the weibull baseline hazard function, so they are commensurate with R's inbuilt density functions.
-##'
-##' @param x a vector of paramters
-##' @return the transformed parameters. For the weibull model, this is the back-transform from 'alpha' and 'lambda' to 'shape' 'scale' (see ?dweibull).
-##' @export
-invtransformestimates.weibull <- function(x){
-
-    alpha <- x[1]
-    lambda <- x[2]
-    
-    shape <- alpha
-    scale <- exp((-1/alpha)*log(lambda))
-
-    ans <- c(shape=shape,scale=scale)    
-    
-    return(ans)
-}
-
-
-
-##' getomegatrans.weibull function
+##' distinfo.weibull function
 ##'
 ##' A function to return the internal transformation function (and its inverse) for the baseline hazard type. E.g. for an Exponential baseline hazard, we work with the log rate, so log is the transformation function. 
 ##' 
 ##' @return the transformation and inverse transformation, jacobian and hessian
 ##' @export
 
-getomegatrans.weibull <- function(){
+distinfo.weibull <- function(){
     retlist <- list()
+    retlist$npars <- 2
+    retlist$parnames <- c("alpha","lambda")
     retlist$trans <- log
     retlist$itrans <- exp
     retlist$jacobian <- exp
@@ -57,38 +17,6 @@ getomegatrans.weibull <- function(){
 }
 
 
-
-
-##' labelomegamatrix.weibull function
-##'
-##' A function to label output matrices for the omegavariable
-##'
-##' @param m a matrix 
-##' @param dist distribution function of the baseline hazard
-##' @return a lebelled matrix
-##' @export
-
-labelomegamatrix.weibull <- function(m,dist){
-    pn <- c("shape","scale")
-    colnames(m) <- pn
-    return(m)
-}
-
-
-
-##' distinfo.weibull function
-##'
-##' A function to 
-##'
-##' @return ...
-##' @export
-
-distinfo.weibull <- function(){
-    ans <- list()
-    ans$npars <- 2
-    ans$parnames <- c("alpha","lambda")
-    return(ans)
-}
 
 
 

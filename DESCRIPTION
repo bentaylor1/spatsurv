@@ -11,7 +11,6 @@ Description: Survival analysis with parametric proportional hazards models where
 License: GPL-3
 Depends:
     survival,
-    flexsurv,
     sp
 Imports:
     iterators,
@@ -21,4 +20,5 @@ Imports:
     Matrix
 Suggests:
     rgdal,
-    gpclib
+    gpclib,
+    mcmcplots

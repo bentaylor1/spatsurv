@@ -1,38 +1,14 @@
-##' transformestimates.exp function
-##'
-##' A function to transform estimates of the parameters of the exponential baseline hazard function, so they are commensurate with R's inbuilt density functions.
-##'
-##' @param x a vector of paramters 
-##' @return the transformed parameters. For the exponential model this is just the identity.
-##' @export
-transformestimates.exp <- function(x){
-    return(x) # note this is logged later for use in the MCMC
-}
-
-
-
-##' invtransformestimates.exp function
-##'
-##' A function to transform estimates of the parameters of the exponential baseline hazard function, so they are commensurate with R's inbuilt density functions.
-##'
-##' @param x a vector of paramters 
-##' @return the transformed parameters. For the exponential model this is just the identity.
-##' @export
-invtransformestimates.exp <- function(x){
-    return(x)
-}
-
-
-
-##' getomegatrans.exp function
+##' distinfo.exp function
 ##'
 ##' A function to return the internal transformation function (and its inverse) for the baseline hazard type. E.g. for an Exponential baseline hazard, we work with the log rate, so log is the transformation function. 
 ##' 
 ##' @return the transformation and inverse transformation, jacobian and hessian
 ##' @export
 
-getomegatrans.exp <- function(){
+distinfo.exp <- function(){
     retlist <- list()
+    retlist$npars <- 1
+    retlist$parnames <- "rate"
     retlist$trans <- log
     retlist$itrans <- exp
     retlist$jacobian <- exp
@@ -41,36 +17,6 @@ getomegatrans.exp <- function(){
 }
 
 
-
-##' labelomegamatrix.exp function
-##'
-##' A function to label output matrices for the omegavariable
-##'
-##' @param m a matrix 
-##' @param dist distribution function of the baseline hazard
-##' @return a lebelled matrix
-##' @export
-
-labelomegamatrix.exp <- function(m,dist){
-    pn <- "rate"
-    colnames(m) <- pn
-    return(m)
-}
-
-
-##' distinfo.exp function
-##'
-##' A function to 
-##'
-##' @return ...
-##' @export
-
-distinfo.exp <- function(){
-    ans <- list()
-    ans$npars <- 1
-    ans$parnames <- "rate"
-    return(ans)
-}
 
 
 #################################################################################

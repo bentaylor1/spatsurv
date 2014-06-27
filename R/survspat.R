@@ -95,73 +95,37 @@ survspat <- function(   formula,
     temp <- call[c(1, indx)]
     temp[[1]] <- as.name("model.frame")
     m <- eval(temp, parent.frame())
-    Y <- model.extract(m, "response")
-    if (!inherits(Y, "Surv")){ 
-        stop("Response must be a survival object")
-    }
-    if (!(attr(Y, "type") %in% c("right", "counting"))){ 
-        stop("Survival object type \"", attr(Y, "type"), "\"", 
-            " not supported")
-    }
-    if (attr(Y, "type") == "counting"){ 
-        Y <- cbind(Y, time = Y[, "stop"] - Y[, "start"])
-    }
-    else{ 
-        Y <- cbind(Y, start = 0, stop = Y[, "time"])
-    }
+
     Terms <- attr(m, "terms")
     X <- model.matrix(Terms, m)
-    dat <- list(Y = Y, X = X[, -1, drop = FALSE], Xraw = m[, 
-        -1, drop = FALSE])
-    X <- dat$X
     
     ##########
     # End of borrowed code    
-    ##########                                       
+    ##########
+ 
+    X <- X[, -1, drop = FALSE]                                   
                         
     mcmcloop <- mcmcLoop(N=mcmc.control$nits,burnin=mcmc.control$burn,thin=mcmc.control$thin,progressor=mcmcProgressTextBar)                            
               
-                  
-                        
-    tm <- Y[,1]
-    delta <- Y[,2]
+    info <- get(paste("distinfo.",dist,sep=""))()
     
-    cat("\n","Getting initial estimates of model parameters using flexsurvreg","\n")
-    mlmod <- suppressWarnings(flexsurvreg(formula,data=data,dist=dist))
-    cat("Done.\n")
-    estim <- mlmod$opt$par
+    control$omegatrans <- info$trans
+    control$omegaitrans <- info$itrans
+    control$omegajacobian <- info$jacobian # used in computing the derivative of the log posterior with respect to the transformed omega (since it is easier to compute with respect to omega) 
+    control$omegahessian <- info$hessian
+    
+    cat("\n","Getting initial estimates of model parameters using maximum likelihood on non-spatial version of the model","\n")
+    mlmod <- maxlikparamPHsurv(surv=survivaldata,X=X,control=control)
+    estim <- mlmod$par
     print(mlmod)
+    cat("Done.\n")
     #browser() 
     
     cat("Calibrating MCMC algorithm and finding initial values ...\n")
     
-    
-    
-    trns <- get(paste("getomegatrans.",dist,sep=""))()  
-    
-    if(dist=="exp"){    
-        betahat <- estim[2:length(estim)]
-        omegahat <- do.call(paste("transformestimates.",dist,sep=""),args=list(x=exp(estim[1]))) 
-        omegahat <- log(omegahat)
-        omegatrans <- trns$trans
-        omegaitrans <- trns$itrans
-    }
-    else if(dist=="weibull"){    
-        betahat <- estim[3:length(estim)]
-        omegahat <- do.call(paste("transformestimates.",dist,sep=""),args=list(x=exp(estim[1:2])))
-        omegahat <- log(omegahat)
-        omegatrans <- trns$trans
-        omegaitrans <- trns$itrans
-    }
-    else{
-        stop("Unknown dist, must be one of 'exp' or 'weibull'")    
-    }
-    
-    control$omegatrans <- omegatrans
-    control$omegaitrans <- omegaitrans
-    control$omegajacobian <- trns$jacobian # used in computing the derivative of the log posterior with respect to the transformed omega (since it is easier to compute with respect to omega) 
-    control$omegahessian <- trns$hessian    
-    
+    betahat <- estim[1:ncol(X)]
+    omegahat <- estim[(ncol(X)+1):length(estim)]
+      
     control$sigmaidx <- match("sigma",cov.model$parnames)
     if(is.na(control$sigmaidx)){
         stop("At least one of the parameters must be the variance of Y, it should be named sigma")
@@ -223,7 +187,7 @@ survspat <- function(   formula,
     SIGMApars <- as.matrix(SIGMA[1:(lenbeta+lenomega+leneta),1:(lenbeta+lenomega+leneta)])
     SIGMAparsINV <- solve(SIGMApars)
     cholSIGMApars <- t(chol(SIGMApars))  
-    #browser()  
+  
     SIGMAgamma <- SIGMA[diagidx][(lenbeta+lenomega+leneta+1):npars]
     SIGMAgammaINV <- 1/SIGMAgamma
     cholSIGMAgamma <- sqrt(SIGMAgamma)
@@ -336,10 +300,6 @@ survspat <- function(   formula,
             tarrec <- c(tarrec,oldlogpost$logpost)
         }
     }
-    
-    #par(mfrow=c(2,1))
-    #matplot(betasamp,type="s")
-    #matplot(exp(omegasamp),type="s")
 
     retlist <- list()
     retlist$formula <- formula
@@ -357,15 +317,8 @@ survspat <- function(   formula,
     #   Back transform for output
     ####
     
-    omegasamp <- omegaitrans(omegasamp)
-    itrans <- get(paste("invtransformestimates.",dist,sep=""))
-    if(ncol(omegasamp)==1){    
-        omegasamp <- matrix(apply(omegasamp,1,itrans))
-    }
-    else{
-        omegasamp <- t(apply(omegasamp,1,itrans))
-    }    
-    omegasamp <- get(paste("labelomegamatrix.",dist,sep=""))(m=omegasamp,dist=dist)
+    omegasamp <- control$omegaitrans(omegasamp)
+    colnames(omegasamp) <- info$parnames
     
     etasamp <- sapply(1:length(cov.model$itrans),function(i){cov.model$itrans[[i]](etasamp[,i])})
     colnames(etasamp) <- cov.model$parnames     
@@ -378,6 +331,7 @@ survspat <- function(   formula,
     retlist$etasamp <- etasamp
     retlist$Ysamp <- Ysamp
     
+    retlist$X <- X
     retlist$survivaldata <- survivaldata
     
     retlist$gridded <- control$gridded
@@ -391,8 +345,10 @@ survspat <- function(   formula,
     retlist$tarrec <- tarrec
     retlist$lasth <- h
     
-    retlist$omegatrans <- omegatrans
-    retlist$omegaitrans <- omegaitrans
+    retlist$omegatrans <- control$omegatrans
+    retlist$omegaitrans <- control$omegaitrans
+    
+    retlist$control <- control
     
     retlist$time.taken <- Sys.time() - start
     

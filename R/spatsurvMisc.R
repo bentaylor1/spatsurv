@@ -52,7 +52,7 @@ gensens <- function(survtimes,censtimes){
 ##' @param xlim optional x-limits of plot, default is to choose this automatically 
 ##' @param ylim optional y-limits of plot, default is to choose this automatically
 ##' @param xlab label for x-axis
-##' @param ylablabel for y-axis
+##' @param ylab label for y-axis
 ##' @param ... other arguments to pass to plot
 ##' @return Plots the survival data non-censored observations appear as dots and censored observations as crosses. The size of the dot is proportional to the observed time.
 ##' @export
