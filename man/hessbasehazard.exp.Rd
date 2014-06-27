@@ -1,0 +1,16 @@
+\name{hessbasehazard.exp}
+\alias{hessbasehazard.exp}
+\title{hessbasehazard.exp function}
+\usage{
+hessbasehazard.exp(pars)
+}
+\arguments{
+  \item{pars}{X}
+}
+\value{
+...
+}
+\description{
+A function to
+}
+

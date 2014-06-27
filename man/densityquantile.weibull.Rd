@@ -1,0 +1,18 @@
+\name{densityquantile.weibull}
+\alias{densityquantile.weibull}
+\title{densityquantile.weibull function}
+\usage{
+densityquantile.weibull(pars, other)
+}
+\arguments{
+  \item{pars}{X}
+
+  \item{other}{X}
+}
+\value{
+...
+}
+\description{
+A function to
+}
+

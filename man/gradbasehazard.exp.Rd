@@ -1,0 +1,16 @@
+\name{gradbasehazard.exp}
+\alias{gradbasehazard.exp}
+\title{gradbasehazard.exp function}
+\usage{
+gradbasehazard.exp(pars)
+}
+\arguments{
+  \item{pars}{X}
+}
+\value{
+...
+}
+\description{
+A function to
+}
+

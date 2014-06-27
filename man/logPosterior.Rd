@@ -1,0 +1,39 @@
+\name{logPosterior}
+\alias{logPosterior}
+\title{logPosterior function}
+\usage{
+logPosterior(surv, X, beta, omega, eta, gamma, priors, cov.model, u, control,
+  gradient = FALSE, hessian = FALSE)
+}
+\arguments{
+  \item{surv}{X}
+
+  \item{X}{X}
+
+  \item{beta}{X}
+
+  \item{omega}{X}
+
+  \item{eta}{X}
+
+  \item{gamma}{X}
+
+  \item{priors}{X}
+
+  \item{cov.model}{X}
+
+  \item{u}{X}
+
+  \item{control}{X}
+
+  \item{gradient}{X}
+
+  \item{hessian}{X}
+}
+\value{
+...
+}
+\description{
+A function to
+}
+

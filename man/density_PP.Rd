@@ -1,0 +1,18 @@
+\name{density_PP}
+\alias{density_PP}
+\title{density_PP function}
+\usage{
+density_PP(inputs)
+}
+\arguments{
+  \item{inputs}{inputs for the function including the model
+  matrix, frailties, fixed effects and the parameters of
+  the baseline hazard derived from this model}
+}
+\value{
+the density function for the individual
+}
+\description{
+A function to compute the density function
+}
+
