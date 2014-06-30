@@ -198,3 +198,44 @@ setupHazard <- function(dist,pars,grad=FALSE,hess=FALSE){
     
     return(funlist) 
 }
+
+
+##' invtransformweibull function
+##'
+##' A function to transform estimates of the parameters of the weibull baseline hazard function, so they are commensurate with R's inbuilt density functions.
+##'
+##' @param x a vector of paramters
+##' @return the transformed parameters. For the weibull model, this transforms 'shape' 'scale' (see ?dweibull) to 'alpha' and 'lambda' for the MCMC
+##' @export
+invtransformweibull <- function(x){
+    a <- x[1] # shape
+    b <- x[2] # scale
+    alpha <- a
+    lambda <- (1/b)^a
+
+    ans <- c(alpha=alpha,lambda=lambda) # note this is logged later for use in the MCMC
+    
+    return(ans)
+}
+
+
+
+##' transformweibull function
+##'
+##' A function to transform estimates of the parameters of the weibull baseline hazard function, so they are commensurate with R's inbuilt density functions.
+##'
+##' @param x a vector of paramters
+##' @return the transformed parameters. For the weibull model, this is the back-transform from 'alpha' and 'lambda' to 'shape' 'scale' (see ?dweibull).
+##' @export
+transformweibull <- function(x){
+
+    alpha <- x[1]
+    lambda <- x[2]
+    
+    shape <- alpha
+    scale <- exp((-1/alpha)*log(lambda))
+
+    ans <- c(shape=shape,scale=scale)    
+    
+    return(ans)
+}

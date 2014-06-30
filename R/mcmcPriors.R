@@ -80,28 +80,11 @@ etapriorGauss <- function(mean,sd){
 }
 
 
-##' logindepnormalprior function
+
+
+##' indepGaussianprior function
 ##'
-##' A function to evaluate the log prior for independent normals
-##'
-##' @param beta parameter beta at which prior is to be evaluated 
-##' @param omega parameter omega at which prior is to be evaluated
-##' @param betapriormean prior mean for beta 
-##' @param betapriorsd prior standard deviation for beta
-##' @param omegapriormean prior mean fpr omega 
-##' @param omegapriorsd prior standard deviation for omega 
-##' @return the log prior
-##' @export
-
-logindepnormalprior <- function(beta,omega,betapriormean,betapriorsd,omegapriormean,omegapriorsd){
-    return(sum(dnorm(beta,betapriormean,betapriorsd,log=TRUE))+sum(dnorm(omega,omegapriormean,omegapriorsd,log=TRUE)))
-}
-
-
-
-##' logindepGaussianprior function
-##'
-##' A function to evaluate the log prior for independent normals
+##' A function to evaluate the prior for independent normals
 ##'
 ##' @param beta parameter beta at which prior is to be evaluated 
 ##' @param omega parameter omega at which prior is to be evaluated
@@ -110,7 +93,7 @@ logindepnormalprior <- function(beta,omega,betapriormean,betapriorsd,omegapriorm
 ##' @return the log prior
 ##' @export
 
-logindepGaussianprior <- function(beta=NULL,omega=NULL,eta=NULL,priors){
+indepGaussianprior <- function(beta=NULL,omega=NULL,eta=NULL,priors){
     
     lp <- 0
     if(!is.null(priors$betaprior)){
@@ -126,4 +109,34 @@ logindepGaussianprior <- function(beta=NULL,omega=NULL,eta=NULL,priors){
     }
     
     return(lp)
+}
+
+
+##' derivindepGaussianprior function
+##'
+##' A function to compute the first and second derivatives of the log-density assuming independent Gaussian priors for each of the parameters.
+##'
+##' @param beta a vector, the parameter beta
+##' @param omega a vector, the parameter omega
+##' @param eta a vector, the parameter eta 
+##' @param priors an object of class 'mcmcPrior', see ?mcmcPrior
+##' @return ...
+##' @export
+
+derivindepGaussianprior <- function(beta=NULL,omega=NULL,eta=NULL,priors){
+    deriv1 <- c((-1/priors$betaprior$sd^2)*(beta-priors$betaprior$mean),(-1/priors$omegaprior$sd^2)*(omega-priors$omegaprior$mean),(-1/priors$etaprior$sd^2)*(eta-priors$etaprior$mean))
+    sdbeta <- priors$betaprior$sd
+    sdomega <- priors$omegaprior$sd
+    sdeta <- priors$etaprior$sd
+    if (length(priors$betaprior$sd)<length(beta)){
+        sdbeta <- rep(priors$betaprior$sd,length(beta))
+    }
+    if (length(priors$omegaprior$sd)<length(omega)){
+        sdomega <- rep(priors$omegaprior$sd,length(omega))
+    }
+    if (length(priors$etaprior$sd)<length(eta)){
+        sdeta <- rep(priors$etaprior$sd,length(eta))
+    }
+    deriv2 <- c(-1/sdbeta^2,-1/sdomega^2,-1/sdeta^2)
+    return(list(deriv1=deriv1,deriv2=deriv2))
 }

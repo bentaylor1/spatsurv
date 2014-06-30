@@ -6,7 +6,7 @@
 ##'
 ##' @param X a matrix of covariate information 
 ##' @param beta the parameter effects 
-##' @param theta parameter for the baseline hazard model (the rate for exponential data and the shape and scale for Weibull data)
+##' @param omega parameter for the baseline hazard model (the rate for exponential data and the shape and scale for Weibull data)
 ##' @param dist the distribution choice: exp or weibull at present
 ##' @param coords matrix with 2 columns giving the coordinates at which to simulate data
 ##' @param cov.parameters a vector: the parameters for the covariance function
@@ -18,14 +18,16 @@
 ##' @export
 
 simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbinom(100,1,0.2)),
-                            beta=matrix(c(0.0296,0.0261,0.035),3,1),
-                            theta=1,
+                            beta=c(0.0296,0.0261,0.035),
+                            omega=1,
                             dist="exp",
                             coords=matrix(runif(2*nrow(X)),nrow(X),2),
                             cov.parameters=c(1,0.1),
                             cov.model=covmodel(model="exponential",pars=NULL),
                             mcmc.control=mcmcpars(nits=100000,burn=10000,thin=90),      
                             savechains=TRUE){
+
+    beta <- matrix(beta,length(beta),1)
 
     mcmcloop <- mcmcLoop(N=mcmc.control$nits,burnin=mcmc.control$burn,thin=mcmc.control$thin,progressor=mcmcProgressTextBar)
     
@@ -44,8 +46,8 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
     XbetaplusY <- X%*%beta + Y
     expXbetaplusY <- exp(XbetaplusY)
     
-    h <- get(paste("basehazard.",dist,sep=""))(theta)    
-    H <- get(paste("cumbasehazard.",dist,sep=""))(theta)
+    h <- get(paste("basehazard.",dist,sep=""))(omega)    
+    H <- get(paste("cumbasehazard.",dist,sep=""))(omega)
     
     nmatrows <- ceiling((mcmc.control$nits-mcmc.control$burn-mcmcloop$waste)/mcmc.control$thin)
     
@@ -60,10 +62,10 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
     count <- 1 # counter to index retained iteration numbers
     
     if(dist=="exp"){
-        t <- rexp(n,theta)
+        t <- rexp(n,omega)
     }
     else if(dist=="weibull"){
-        t <- rweibull(n,shape=theta[1],scale=theta[2])
+        t <- rweibull(n,shape=omega[1],scale=omega[2])
     }
     
     
@@ -112,5 +114,5 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
     
     cat("Mean acceptance:",mean(acrec),"\n")
     
-    return(list(X=X,T=T,survtimes=tchoice,theta=theta,beta=beta,tarrec=tarrec,n=n,Y=Y,dist=dist,coords=coords,cov.parameters=cov.parameters,distmat=distmat,u=u))
+    return(list(X=X,T=T,survtimes=tchoice,omega=omega,beta=beta,tarrec=tarrec,n=n,Y=Y,dist=dist,coords=coords,cov.parameters=cov.parameters,distmat=distmat,u=u))
 }

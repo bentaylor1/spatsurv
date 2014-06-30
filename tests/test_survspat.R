@@ -8,16 +8,16 @@ n <- 100
 DIST <- "exp"
 
 if(DIST=="exp"){
-    THETA <- 1
+    OMEGA <- 1
 }
 if(DIST=="weibull"){
-    THETA <- c(1,0.5)
+    OMEGA <- c(1,0.5)
 }
 
 # Generate spatially correlated survival data ... 
 dat <- simsurv(X=cbind( age=runif(n,5,50),sex=rbinom(n,1,0.5),cancer=rbinom(n,1,0.2)),
                         dist=DIST,
-                        theta=THETA,
+                        omega=OMEGA,
                         mcmc.control=mcmcpars(nits=100,burn=10,thin=10))  
 
 coords <- dat$coords
@@ -41,11 +41,8 @@ etaprior <- etapriorGauss(mean=log(c(SIGMA,PHI)),sd=c(0.3,0.3))
 priors <- mcmcPriors(   betaprior=betaprior,
                         omegaprior=omegaprior,
                         etaprior=etaprior,
-                        call=logindepGaussianprior,
-                        derivative=derivlogindepGaussianprior)
-
-# test prior function
-lgpr <- logindepGaussianprior(beta=c(1,2),omega=c(5,3),eta=c(0.1,0.2),priors=priors)
+                        call=indepGaussianprior,
+                        derivative=derivindepGaussianprior)
 
 # create SpatialPointsDataFrame containing the covariate data and coordinates of the survival data 
 spatdat <- SpatialPointsDataFrame(coords,data=as.data.frame(X))

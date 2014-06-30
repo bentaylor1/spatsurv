@@ -13,4 +13,4 @@ survdat <- gensens(survtimes,censtimes)
 
 plot(survfit(survdat~1))
                 
-dat1 <- simsurv(mcmc.control=mcmcpars(nits=100,burn=10,thin=11),dist="weibull",theta=c(1,0.5))                
+dat1 <- simsurv(mcmc.control=mcmcpars(nits=100,burn=10,thin=11),dist="weibull",omega=c(1,0.5))                
