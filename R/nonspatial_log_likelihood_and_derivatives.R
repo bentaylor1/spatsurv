@@ -72,12 +72,12 @@ NonSpatialLogLikelihood_or_gradient <- function(surv,X,beta,omega,control,loglik
     else{
         rightcensored <- surv[,"status"] == 0
         notcensored <- surv[,"status"] == 1
-        lefttruncated <- surv[,"status"] == 2
+        leftcensored <- surv[,"status"] == 2
         intervalcensored <- surv[,"status"] == 3
 
         Rtest <- any(rightcensored)        
         Utest <- any(notcensored) 
-        Ltest <- any(lefttruncated)
+        Ltest <- any(leftcensored)
         Itest <- any(intervalcensored)
     }
 
@@ -110,26 +110,28 @@ NonSpatialLogLikelihood_or_gradient <- function(surv,X,beta,omega,control,loglik
         S2 <- exp(-J2)
     }
     
+    if(censoringtype=="right" | censoringtype=="left"){
+        h <- haz$h(surv[,"time"])
+    }
+    else{ #censoringtype=="interval"
+        h <- haz$h(surv[,"time1"])
+    }
+    
     
     if(loglikelihood){ 
         if(censoringtype=="right"){
-            h <- haz$h(surv[,"time"])
-            
             loglik <-  (if(Utest){sum(Xbeta[notcensored] + log(h)[notcensored] - J[notcensored])}else{0}) + 
                        (if(Ctest){sum(-J[censored])}else{0})
         }
         else if(censoringtype=="left"){
-            h <- haz$h(surv[,"time"])
-            
             loglik <-  (if(Utest){sum(Xbeta[notcensored] + log(h)[notcensored] - J[notcensored])}else{0}) + 
                        (if(Ctest){sum(log(1-S[censored]))}else{0})
         }
         else{ #censoringtype=="interval"
-            h <- haz$h(surv[,"time1"])
-            
+
             loglik <-  (if(Utest){sum(Xbeta[notcensored] + log(h)[notcensored] - J1[notcensored])}else{0}) + 
                        (if(Rtest){sum(-J1[rightcensored])}else{0}) + 
-                       (if(Ltest){sum(log(1-S1[lefttruncated]))}else{0}) + 
+                       (if(Ltest){sum(log(1-S1[leftcensored]))}else{0}) + 
                        (if(Itest){sum(log(S1[intervalcensored]-S2[intervalcensored]))}else{0})
         }
         
@@ -174,12 +176,12 @@ NonSpatialLogLikelihood_or_gradient <- function(surv,X,beta,omega,control,loglik
         else{ #censoringtype=="interval" 
             dP_dbeta <- (if(Utest){colSums(X[notcensored,,drop=FALSE] - dJ_dbeta1[notcensored,,drop=FALSE])}else{0}) + 
                         (if(Rtest){colSums(-dJ_dbeta1[rightcensored,,drop=FALSE])}else{0}) + 
-                        (if(Ltest){colSums((S[lefttruncated]/(1-S[lefttruncated]))*dJ_dbeta1[lefttruncated,,drop=FALSE])}else{0}) + 
+                        (if(Ltest){colSums((S1[leftcensored]/(1-S1[leftcensored]))*dJ_dbeta1[leftcensored,,drop=FALSE])}else{0}) + 
                         (if(Itest){colSums((1/(S1[intervalcensored]-S2[intervalcensored]))*(dJ_dbeta2[intervalcensored,]*S2[intervalcensored]-dJ_dbeta1[intervalcensored,,drop=FALSE]*S1[intervalcensored]))}else{0})
-            dh_domega <- matrix(haz$gradh(surv[,"time"]),ncol=length(omega))
+            dh_domega <- matrix(haz$gradh(surv[,"time1"]),ncol=length(omega))
             dP_domega <-    (if(Utest){colSums(dh_domega[notcensored,,drop=FALSE] / h[notcensored] - dJ_domega1[notcensored,,drop=FALSE])}else{0}) + 
                             (if(Rtest){colSums(-dJ_domega1[rightcensored,,drop=FALSE])}else{0}) + 
-                            (if(Ltest){colSums((S1[lefttruncated]/(1-S[lefttruncated]))*dJ_domega1[lefttruncated,,drop=FALSE])}else{0}) + 
+                            (if(Ltest){colSums((S1[leftcensored]/(1-S1[leftcensored]))*dJ_domega1[leftcensored,,drop=FALSE])}else{0}) + 
                             (if(Itest){colSums((1/(S1[intervalcensored]-S2[intervalcensored]))*(dJ_domega2[intervalcensored,]*S2[intervalcensored]-dJ_domega1[intervalcensored,,drop=FALSE]*S1[intervalcensored]))}else{0})
             dP_domega <- control$omegajacobian(omegaorig)*dP_domega # this puts the derivative back on the correct scale dL/dpsi = dL/dtheta * dtheta/dpsi, e.g. psi=log(theta)            
             

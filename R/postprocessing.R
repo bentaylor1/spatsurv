@@ -28,6 +28,9 @@ print.mcmcspatsurv <- function(x,probs=c(0.5,0.025,0.975),digits = 3, scientific
     print(quant$etaquant,digits=digits,scientific=scientific)
     cat("\n")
     
+    cat("Deviance Information Criterion: ",x$DIC,"\n")
+    cat("\n")
+    
     cat("MCMC Details:\n")
     m <- matrix(c(x$mcmc.control$nits,x$mcmc.control$burn,x$mcmc.control$thin),3,1)
     rownames(m) <- c("Number of Iterations","Burnin length","Thining")
@@ -208,7 +211,7 @@ baselinehazard <- function(x,t=NULL,n=100,probs=c(0.025,0.5,0.975),plot=TRUE){
         }
     }    
     
-    return(toreturn)
+    return(list(t=t,qts=toreturn))
 }
 
 
@@ -433,16 +436,21 @@ predict.mcmcspatsurv <- function(object,type="densityquantile",newdata=NULL,t=NU
         }     
     }
     
+    if(type=="densityquantile" & type=="Et"){
+        close(pb)
+    }    
+    
     if(type=="Et"){
         predictmat <- colMeans(dat)
         attr(predictmat,"empirical") <- t(dat) 
     }
     
-    if(type=="densityquantile" & type=="Et"){
-        close(pb)
-    }   
+    if(length(indx==1)&(type=="hazard"|type=="survival"|type=="density")){
+        predictmat <- toplot
+    }
+       
     
-    return(predictmat)
+    return(list(t=t,predict=predictmat))
     
 }
 
@@ -598,11 +606,12 @@ priorposterior <- function(x,breaks=30,ylab="Density",main="",pause=TRUE,...){
 ##' @param probs vector of probabilities to be fed to quantile function  
 ##' @param rmax  maximum distance in space to compute this distance up to
 ##' @param n the number of points at which to evaluate the posterior covariance.
+##' @param plot whether to plot the result
 ##' @param ... other arguments to be passed to matplot function 
 ##' @return produces a plot of the posterior spatial covariance function.
 ##' @export
 
-posteriorcov <- function(x,probs=c(0.025,0.5,0.975),rmax=NULL,n=100,...){
+posteriorcov <- function(x,probs=c(0.025,0.5,0.975),rmax=NULL,n=100,plot=TRUE,...){
     nr <- nrow(x$etasamp)
     nc <- ncol(x$etasamp)
     pars <- matrix(NA,nr,nc)
@@ -617,8 +626,19 @@ posteriorcov <- function(x,probs=c(0.025,0.5,0.975),rmax=NULL,n=100,...){
     r <- seq(0,rmaxx,length.out=n)
     covs <- t(apply(pars,1,function(pp){x$cov.model$eval(r,pars=pp)}))
     qts <- t(apply(covs,2,quantile,probs=probs))
+    rownames(qts) <- r
     
-    matplot(r,qts,type="l",xlab="Distance",ylab="Covariance",...)
+    if(plot){
+        if(length(probs)==3){
+            matplot(r,qts,type="l",col=c("purple","black","blue"),lty=c("dashed","solid","dashed"),xlab="Distance",ylab="Covariance")
+            legend("topright",lty=c("dashed","solid","dashed"),col=rev(c("purple","black","blue")),legend=rev(probs))
+        }
+        else{
+            matplot(r,qts,type="l",xlab="Distance",ylab="Covariance")
+        }
+    }
+    
+    return(list(r=r,qts=qts)) 
 }
 
 
@@ -665,7 +685,8 @@ posteriorcov <- function(x,probs=c(0.025,0.5,0.975),rmax=NULL,n=100,...){
 #    
 #    mu_22 <- -object$cov.model$itrans[[object$control$sigmaidx]](eta[object$control$sigmaidx])^2/2                    
 #    
-#    sigma <- matrix(EvalCov(cov.model=object$cov.model,u=u,parameters=eta),mx,mx)
+#    etapars <- sapply(1:cov.model$npar,function(i){cov.model$itrans[[i]](eta[i])})
+#    sigma <- matrix(EvalCov(cov.model=object$cov.model,u=u,parameters=etapars),mx,mx)
 #   
 #    sigma_12 <- sigma[1:N,(N+1):mx]
 #    sigma_22inv <- solve(sigma[(N+1):mx,(N+1):mx])

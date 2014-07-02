@@ -50,7 +50,6 @@ ExponentialCovFct <- function(){
     ans$itrans <- c(exp,exp) # inverse transform back to correct scale
     ans$trans <- c(log,log) # transform assumed  
     ans$eval <- function(u,pars){
-        pars <- exp(pars)
         ans<- pars[1]^2 * exp(-u/pars[2])        
         return(ans)
     }
@@ -74,7 +73,6 @@ SpikedExponentialCovFct <- function(){
     ans$itrans <- c(exp,exp,exp) # inverse transform back to correct scale
     ans$trans <- c(log,log,log) # transform assumed  
     ans$eval <- function(u,pars){
-        pars <- exp(pars)
         ans <- pars[1]^2 * exp(-u/pars[2])
         ans[u==0] <- ans[u==0] + pars[3]^2 
         return(ans)
@@ -98,7 +96,7 @@ SpikedExponentialCovFct <- function(){
 
 EvalCov <- function(cov.model,u,parameters){
     if(inherits(cov.model,"fromRandomFieldsCovarianceFct")){
-        ev <- getcov(u=u,sigma=exp(parameters[1]),phi=exp(parameters[2]),model=cov.model$model,pars=cov.model$pars)
+        ev <- getcov(u=u,sigma=parameters[1],phi=parameters[2],model=cov.model$model,pars=cov.model$pars)
     }
     else if(inherits(cov.model,"fromUserFunction")){
         ev <- cov.model$eval(u=u,pars=parameters)

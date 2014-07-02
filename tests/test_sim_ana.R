@@ -9,7 +9,7 @@ X <- as.data.frame(dat$X) # covariates
 survtimes <- dat$survtimes
 n <- length(survtimes)
 censtimes <- runif(n,min(survtimes),max(survtimes))                                    
-survdat <- gensens(survtimes,censtimes)                                    
+survdat <- gencens(survtimes,censtimes)                                    
 
 plot(survfit(survdat~1))
                 

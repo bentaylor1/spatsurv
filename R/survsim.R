@@ -36,8 +36,7 @@ simsurv <- function(X=cbind(age=runif(100,5,50),sex=rbinom(100,1,0.5),cancer=rbi
     n <- nrow(X)
     u <- as.vector(distmat)
 
-    transpars <- sapply(1:length(cov.parameters),function(i){cov.model$trans[[i]](cov.parameters[i])})
-    sigma <- matrix(EvalCov(cov.model,u=u,parameters=transpars),n,n) # note that the parameters are back transformed in the call to EvalCov  
+    sigma <- matrix(EvalCov(cov.model,u=u,parameters=cov.parameters),n,n)  
     
     sigmachol <- t(chol(sigma))
     Y <- -cov.parameters[which(cov.model$parnames=="sigma")]^2/2 + sigmachol%*%rnorm(n)

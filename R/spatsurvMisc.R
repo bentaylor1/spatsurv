@@ -1,34 +1,82 @@
-##' gensens function
+##' gencens function
 ##'
 ##' A function to generate observed times given a vector of true survival times and a vector of censoring times. Used in the simulation of
 ##' survival data
 ##'
 ##' @param survtimes a vector of survival times 
-##' @param censtimes a vector of censoring times 
+##' @param censtimes a vector of censoring times for left or right censored data, 2-column matrix of censoring times for interval censoring (number of rows equal to the number of observations). 
+##' @param type the type of censoring to generate can be 'right' (default), 'left' or 'interval' 
 ##' @return a named list containing 'obstimes', the observed time of the event; and 'censored', the censoring indicator which is equal to 1 if the
 ##' event is observed and 0 otherwise.
 ##' @export
 
 
-gensens <- function(survtimes,censtimes){
-    
-    n <- length(survtimes)
-    
-    if(length(survtimes)!=length(censtimes)){
-        stop("survtimes and censtimes should have the same length")
-    } 
+gencens <- function(survtimes,censtimes,type="right"){
 
-    obstimes <- survtimes
-    cens <- rep(1,n)
-   
-    for(i in 1:n){
-        if(censtimes[i]<survtimes[i]){
-            obstimes[i] <- censtimes[i]
-            cens[i] <- 0
-        }
+    if(!(type=="right" | type=="left" | type=="interval")){
+        stop("type must be one of 'right', 'left' or 'interval'")    
     }
     
-    return(Surv(time=obstimes,event=cens))
+    n <- length(survtimes)
+    if(type=="right" | type=="left"){
+        if(length(survtimes)!=length(censtimes)){
+            stop("survtimes and censtimes should have the same length")
+        }
+    }
+    else{        
+        if(ncol(censtimes)!=2 | nrow(censtimes)!=n){
+            stop("censtimes should be a 2-column matrix with number of rows equal to length(survtimes)")
+        }
+    } 
+    
+    if(type=="right"){
+        obstimes <- survtimes
+        cens <- rep(1,n)   
+        for(i in 1:n){
+            if(censtimes[i]<survtimes[i]){
+                obstimes[i] <- censtimes[i]
+                cens[i] <- 0
+            }
+        }
+        return(Surv(time=obstimes,event=cens,type="right"))
+    }
+    if(type=="left"){
+        obstimes <- survtimes
+        cens <- rep(1,n)   
+        for(i in 1:n){
+            if(censtimes[i]>survtimes[i]){
+                obstimes[i] <- censtimes[i]
+                cens[i] <- 0
+            }
+        }
+        return(Surv(time=obstimes,event=cens,type="left"))
+    }
+    if(type=="interval"){
+        obstimes <- cbind(survtimes,NA)
+        cens <- rep(1,n)
+        uncensidx <- sample(1:n,floor(n/2))
+        alter <- rep(TRUE,n)
+        alter[uncensidx] <- FALSE #
+        censtimes <- t(apply(censtimes,1,sort))   
+        for(i in 1:n){
+            if(censtimes[i,1]<survtimes[i] & censtimes[i,2]>survtimes[i] & alter[i]){
+                obstimes[i,1] <- censtimes[i,1]
+                obstimes[i,2] <- censtimes[i,2]
+                cens[i] <- 3 # interval censored
+            }
+            else if(censtimes[i,2]<survtimes[i] & alter[i]){
+                obstimes[i,1] <- censtimes[i,2]
+                cens[i] <- 0 # right censored
+            }
+            else if(censtimes[i,1]>survtimes[i] & alter[i]){
+                obstimes[i,1] <- censtimes[i,1]
+                cens[i] <- 2 # left censored
+            }
+        }
+        return(Surv(time=obstimes[,1],time2=obstimes[,2],event=cens,type="interval"))
+    }
+    
+  
 }
 
 
@@ -153,7 +201,7 @@ checkSurvivalData <- function(s){
         } 
         
         if(attr(s,"type")=="left" | attr(s,"type")=="interval"){
-            cat("\n ####################################################\n # WARNING LEFT AND INTERVAL CENSORED DATA IS UNDER #\n # DEVELOPMENT AND HAS NOT UNDERGONE TESTING AS YET #\n ####################################################\n\n")
+            cat("\n #####################################################\n # WARNING: CODE FOR LEFT AND INTERVAL CENSORED DATA #\n #          IS UNDER DEVELOPMENT                     #\n #####################################################\n\n")
             warning("*** CODE UNDER DEVELOPMENT ***",immediate.=TRUE)
         }
            

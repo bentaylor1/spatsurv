@@ -257,7 +257,8 @@ proposalVariance <- function(X,surv,betahat,omegahat,Yhat,priors,cov.model,u,con
     # eta
     logpost <- function(eta,surv,X,beta,omega,Y,priors,cov.model,u,control){
 
-        sigma <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=eta),n,n)
+        etapars <- sapply(1:cov.model$npar,function(i){cov.model$itrans[[i]](eta[i])})
+        sigma <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etapars),n,n)
         cholsigma <- t(chol(sigma))
         cholsigmainv <- solve(cholsigma)
         MU <- -cov.model$itrans[[control$sigmaidx]](eta[control$sigmaidx])^2/2
@@ -281,8 +282,9 @@ proposalVariance <- function(X,surv,betahat,omegahat,Yhat,priors,cov.model,u,con
     # entry for eta in propossal covariance
     sigma[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)] <- matr    
         
-    #estimate of gamma  
-    ssigma <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etahat),n,n)
+    #estimate of gamma
+    etahatpars <- sapply(1:cov.model$npar,function(i){cov.model$itrans[[i]](etahat[i])})  
+    ssigma <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etahatpars),n,n)
     cholssigma <- t(chol(ssigma))
     MU <- -cov.model$itrans[[control$sigmaidx]](etahat[control$sigmaidx])^2/2
     gammahat <- solve(cholssigma)%*%(Yhat-MU)
@@ -333,7 +335,8 @@ proposalVariance_gridded <- function(X,surv,betahat,omegahat,Yhat,priors,cov.mod
     # eta
     logpost <- function(eta,surv,X,beta,omega,Ygrid,priors,cov.model,u,control){
         
-        covbase <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=eta),control$Mext,control$Next)
+        etapars <- sapply(1:cov.model$npar,function(i){cov.model$itrans[[i]](eta[i])})
+        covbase <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etapars),control$Mext,control$Next)
         
         rootQeigs <- sqrt(1/Re(fft(covbase)))   
        
@@ -361,8 +364,9 @@ proposalVariance_gridded <- function(X,surv,betahat,omegahat,Yhat,priors,cov.mod
     # entry for eta in propossal covariance
     sigma[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)] <- matr    
         
-    #estimate of gamma  
-    covbase <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etahat),control$Mext,control$Next)        
+    #estimate of gamma
+    etahatpars <- sapply(1:cov.model$npar,function(i){cov.model$itrans[[i]](etahat[i])})  
+    covbase <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etahatpars),control$Mext,control$Next)        
     rootQeigs <- sqrt(1/Re(fft(covbase)))   
     pars <- sapply(1:length(etahat),function(i){cov.model$itrans[[i]](etahat[i])})
     ymean <- -pars[which(cov.model$parnames=="sigma")]^2/2
@@ -420,7 +424,7 @@ estimateY <- function(X,betahat,omegahat,surv,control){
     else{
         rightcensored <- surv[,"status"] == 0
         notcensored <- surv[,"status"] == 1
-        lefttruncated <- surv[,"status"] == 2
+        leftcensored <- surv[,"status"] == 2
         intervalcensored <- surv[,"status"] == 3
     }   
 
@@ -450,7 +454,7 @@ estimateY <- function(X,betahat,omegahat,surv,control){
             if(rightcensored[i]){
                 tpot <- tsubs[notcensored][tsubs[notcensored]>tsubs[i]] # potential t
             }
-            if(lefttruncated[i]){
+            if(leftcensored[i]){
                 tpot <- tsubs[notcensored][tsubs[notcensored]<tsubs[i]] # potential t
             }
             if(intervalcensored[i]){

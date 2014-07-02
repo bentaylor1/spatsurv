@@ -39,7 +39,8 @@ logPosterior_gridded <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,
     
     n <- nrow(X)
     
-    covbase <- matrix(EvalCov(cov.model,u=u,parameters=eta),control$Mext,control$Next)    
+    etapars <- sapply(1:cov.model$npar,function(i){cov.model$itrans[[i]](eta[i])})
+    covbase <- matrix(EvalCov(cov.model,u=u,parameters=etapars),control$Mext,control$Next)    
     invrootQeigs <- sqrt(Re(fft(covbase)))    
     Ygrid <- YfromGamma(gamma,invrootQeigs=invrootQeigs,mu=-(exp(eta[1]))^2/2)
     
@@ -58,12 +59,12 @@ logPosterior_gridded <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,
     else{
         rightcensored <- surv[,"status"] == 0
         notcensored <- surv[,"status"] == 1
-        lefttruncated <- surv[,"status"] == 2
+        leftcensored <- surv[,"status"] == 2
         intervalcensored <- surv[,"status"] == 3
 
         Rtest <- any(rightcensored)        
         Utest <- any(notcensored) 
-        Ltest <- any(lefttruncated)
+        Ltest <- any(leftcensored)
         Itest <- any(intervalcensored)
     }
 
@@ -101,25 +102,28 @@ logPosterior_gridded <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,
     if(censoringtype=="right"){
         h <- haz$h(surv[,"time"])
         
-        logpost <-  (if(Utest){sum(XbetaplusY[notcensored] + log(h)[notcensored] - J[notcensored])}else{0}) + 
-                    (if(Ctest){sum(-J[censored])}else{0}) + 
-                    priorcontrib
+        loglik <-  (if(Utest){sum(XbetaplusY[notcensored] + log(h)[notcensored] - J[notcensored])}else{0}) + 
+                    (if(Ctest){sum(-J[censored])}else{0})
+                    
+        logpost <- loglik + priorcontrib
     }
     else if(censoringtype=="left"){
         h <- haz$h(surv[,"time"])
         
-        logpost <-  (if(Utest){sum(XbetaplusY[notcensored] + log(h)[notcensored] - J[notcensored])}else{0}) + 
-                    (if(Ctest){sum(log(1-S[censored]))}else{0}) + 
-                    priorcontrib
+        loglik <-  (if(Utest){sum(XbetaplusY[notcensored] + log(h)[notcensored] - J[notcensored])}else{0}) + 
+                    (if(Ctest){sum(log(1-S[censored]))}else{0})
+                    
+        logpost <- loglik + priorcontrib
     }
     else{ #censoringtype=="interval"
         h <- haz$h(surv[,"time1"])
         
-        logpost <-  (if(Utest){sum(XbetaplusY[notcensored] + log(h)[notcensored] - J1[notcensored])}else{0}) + 
+        loglik <-  (if(Utest){sum(XbetaplusY[notcensored] + log(h)[notcensored] - J1[notcensored])}else{0}) + 
                     (if(Rtest){sum(-J1[rightcensored])}else{0}) + 
-                    (if(Ltest){sum(log(1-S1[lefttruncated]))}else{0}) + 
-                    (if(Itest){sum(log(S1[intervalcensored]-S2[intervalcensored]))}else{0}) + 
-                    priorcontrib
+                    (if(Ltest){sum(log(1-S1[leftcensored]))}else{0}) + 
+                    (if(Itest){sum(log(S1[intervalcensored]-S2[intervalcensored]))}else{0})
+                    
+        logpost <- loglik + priorcontrib
     }
 
     
@@ -172,21 +176,21 @@ logPosterior_gridded <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,
         else{ #censoringtype=="interval" 
             dP_dbeta <- (if(Utest){colSums(X[notcensored,,drop=FALSE] - dJ_dbeta1[notcensored,,drop=FALSE])}else{0}) + 
                         (if(Rtest){colSums(-dJ_dbeta1[rightcensored,,drop=FALSE])}else{0}) + 
-                        (if(Ltest){colSums((S[lefttruncated]/(1-S[lefttruncated]))*dJ_dbeta1[lefttruncated,,drop=FALSE])}else{0}) + 
+                        (if(Ltest){colSums((S1[leftcensored]/(1-S1[leftcensored]))*dJ_dbeta1[leftcensored,,drop=FALSE])}else{0}) + 
                         (if(Itest){colSums((1/(S1[intervalcensored]-S2[intervalcensored]))*(dJ_dbeta2[intervalcensored,]*S2[intervalcensored]-dJ_dbeta1[intervalcensored,,drop=FALSE]*S1[intervalcensored]))}else{0})
-            dh_domega <- matrix(haz$gradh(surv[,"time"]),ncol=length(omega))
+            dh_domega <- matrix(haz$gradh(surv[,"time1"]),ncol=length(omega))
             dP_domega <-    (if(Utest){colSums(dh_domega[notcensored,,drop=FALSE] / h[notcensored] - dJ_domega1[notcensored,,drop=FALSE])}else{0}) + 
                             (if(Rtest){colSums(-dJ_domega1[rightcensored,,drop=FALSE])}else{0}) + 
-                            (if(Ltest){colSums((S1[lefttruncated]/(1-S[lefttruncated]))*dJ_domega1[lefttruncated,,drop=FALSE])}else{0}) + 
+                            (if(Ltest){colSums((S1[leftcensored]/(1-S1[leftcensored]))*dJ_domega1[leftcensored,,drop=FALSE])}else{0}) + 
                             (if(Itest){colSums((1/(S1[intervalcensored]-S2[intervalcensored]))*(dJ_domega2[intervalcensored,]*S2[intervalcensored]-dJ_domega1[intervalcensored,,drop=FALSE]*S1[intervalcensored]))}else{0})
             dP_domega <- control$omegajacobian(omegaorig)*dP_domega # this puts the derivative back on the correct scale dL/dpsi = dL/dtheta * dtheta/dpsi, e.g. psi=log(theta)
             
             bitsnbobs <- matrix(0,control$Mext,control$Next)
             bitsnbobs[control$uqidx] <- bitsnbobs[control$uqidx] + 
-                                        (if(Utest){sapply(control$uqidx,function(i){sum(1-J[control$idx==i & notcensored])})}else{0}) -
-                                        (if(Rtest){sapply(control$uqidx,function(i){sum(-J[control$idx==i & rightcensored])})}else{0}) +  
-                                        (if(Ltest){sapply(control$uqidx,function(i){sum((S[control$idx==i & lefttruncated]/(1-S[control$idx==i & lefttruncated]))*J[control$idx==i & lefttruncated])})}else{0}) +                                                   
-                                        (if(Ltest){sapply(control$uqidx,function(i){(1/(S1[control$idx==i & intervalcensored]-S2[control$idx==i & intervalcensored]))*(J2[control$idx==i & intervalcensored]*S2[control$idx==i & intervalcensored]-J1[control$idx==i & intervalcensored]*S1[control$idx==i & intervalcensored])})}else{0})
+                                        (if(Utest){sapply(control$uqidx,function(i){sum(1-J1[control$idx==i & notcensored])})}else{0}) -
+                                        (if(Rtest){sapply(control$uqidx,function(i){sum(-J1[control$idx==i & rightcensored])})}else{0}) +  
+                                        (if(Ltest){sapply(control$uqidx,function(i){sum((S1[control$idx==i & leftcensored]/(1-S1[control$idx==i & leftcensored]))*J1[control$idx==i & leftcensored])})}else{0}) +                                                   
+                                        (if(Itest){sapply(control$uqidx,function(i){sum(((1/(S1-S2))*(J2*S2-J1*S1))[control$idx==i & intervalcensored])})}else{0})
         
 
             dP_dgamma <- as.vector(Re((1/(control$Mext*control$Next))*fft(invrootQeigs*fft(bitsnbobs,inverse=TRUE))))            
@@ -197,12 +201,13 @@ logPosterior_gridded <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,
     }
     
     
-    if(hessian){   
+    if(hessian){
+        
+        cross_gradh <- lapply(1:nrow(X),function(i){outer(dh_domega[i,],dh_domega[i,])})   
     
-        d2h_domega1_domega2 <- haz$hessh(surv[,"time"]) 
-        cross_gradh <- lapply(1:nrow(X),function(i){outer(dh_domega[i,],dh_domega[i,])})
-    
-        if(censoringtype=="left" | censoringtype=="right"){            
+        if(censoringtype=="left" | censoringtype=="right"){
+            d2h_domega1_domega2 <- haz$hessh(surv[,"time"]) 
+                               
             d2J_dbetak_dbetaj <- lapply(1:nrow(X),function(i){outer(X[i,],X[i,])*J[i]})
             d2J_domega_dbeta <- lapply(1:length(omega),function(i){dJ_domega[,i]*X})
             d2J_domega1_domega2 <- mapply("*", haz$hessH(surv[,"time"]), expXbetaplusY, SIMPLIFY = FALSE)
@@ -219,6 +224,8 @@ logPosterior_gridded <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,
             cross_dS_domega <- lapply(1:nrow(X),function(i){outer(dS_domega[i,],dS_domega[i,])})
         } 
         else{ # censoringtype=="interval"
+            d2h_domega1_domega2 <- haz$hessh(surv[,"time1"])
+            
             d2J_dbetak_dbetaj_1 <- lapply(1:nrow(X),function(i){outer(X[i,],X[i,])*J1[i]})
             d2J_domega_dbeta_1 <- lapply(1:length(omega),function(i){dJ_domega1[,i]*X})
             d2J_domega1_domega2_1 <- mapply("*", haz$hessH(surv[,"time1"]), expXbetaplusY, SIMPLIFY = FALSE)
@@ -296,33 +303,41 @@ logPosterior_gridded <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,
                                     (if(Ctest){Reduce('+',mapply('*',d2S_domega_dbeta[censored],1/(1-S[censored]),SIMPLIFY=FALSE)) - Reduce('+',mapply('*',cross_dS_domega_dbeta[censored],1/(1-S[censored])^2,SIMPLIFY=FALSE))}else{0})
             hess_omega_beta <- control$omegajacobian(omegaorig)*hess_omega_beta                                     
             
-#            hess_gamma <- (if(Utest){-colSums(d2J_dgamma2[notcensored,,drop=FALSE])}else{0}) -
-#                                    (if(Ctest){colSums((1/(1-S[censored]))*d2S_dgamma2[censored,,drop=FALSE]) - colSums((1/(1-S[censored])^2)*cross_dS_dgamma[censored,,drop=FALSE])}else{0})
+            bitsnbobs <- matrix(0,control$Mext,control$Next)
+            bitsnbobs[control$uqidx] <- bitsnbobs[control$uqidx] + 
+                                    (if(Utest){sapply(control$uqidx,function(i){sum(-J[notcensored & control$idx==i])})}else{0}) -
+                                    (if(Ctest){sapply(control$uqidx,function(i){sum((S*(J^2-J)/(1-S)+(J*S/(1-S))^2)[censored & control$idx==i])})}else{0})           
+            hess_gamma <- as.vector(Re((1/(control$Mext*control$Next))*fft(covbase*fft(bitsnbobs,inverse=TRUE))))
         }
-        else{ # censoringtype=="interval"        
+        else{ # censoringtype=="interval"  
+                 
             hess_beta <- (if(Utest){-Reduce('+',d2J_dbetak_dbetaj_1[notcensored])}else{0}) - 
                                     (if(Rtest){Reduce('+',d2J_dbetak_dbetaj_1[rightcensored])}else{0}) - 
-                                    (if(Ltest){Reduce('+',mapply('*',d2S_dbetak_dbetaj_1[lefttruncated],1/(1-S1[lefttruncated]),SIMPLIFY=FALSE)) - Reduce('+',mapply('*',cross_dS_dbeta_1[lefttruncated],1/(1-S1[lefttruncated])^2,SIMPLIFY=FALSE))}else{0}) +
+                                    (if(Ltest){Reduce('+',mapply('*',d2S_dbetak_dbetaj_1[leftcensored],1/(1-S1[leftcensored]),SIMPLIFY=FALSE)) - Reduce('+',mapply('*',cross_dS_dbeta_1[leftcensored],1/(1-S1[leftcensored])^2,SIMPLIFY=FALSE))}else{0}) +
                                     (if(Itest){Reduce('+',mapply('*',mapply('-',d2S_dbetak_dbetaj_1[intervalcensored],d2S_dbetak_dbetaj_2[intervalcensored],SIMPLIFY=FALSE),1/(S1[intervalcensored]-S2[intervalcensored]),SIMPLIFY=FALSE)) - Reduce('+',mapply('*',mapply(function(a,b,c,d){a-b-c+d},cross_dS_dbeta_1[intervalcensored],cross_dS_dbeta_12[intervalcensored],cross_dS_dbeta_21[intervalcensored],cross_dS_dbeta_2[intervalcensored],SIMPLIFY=FALSE),1/(S1[intervalcensored]-S2[intervalcensored])^2,SIMPLIFY=FALSE))}else{0})
             
             
             hess_omega <- (if(Utest){Reduce('+',mapply('*',d2h_domega1_domega2[notcensored],1/h[notcensored],SIMPLIFY=FALSE)) - Reduce('+',mapply('*',cross_gradh[notcensored],1/h[notcensored]^2,SIMPLIFY=FALSE)) - Reduce('+',d2J_domega1_domega2_1[notcensored])}else{0}) - 
                                     (if(Rtest){Reduce('+',d2J_domega1_domega2_1[rightcensored])}else{0}) - 
-                                    (if(Ltest){Reduce('+',mapply('*',d2S_domega1_domega2_1[lefttruncated],1/(1-S1[lefttruncated]),SIMPLIFY=FALSE)) - Reduce('+',mapply('*',cross_dS_domega_1[lefttruncated],1/(1-S1[lefttruncated])^2,SIMPLIFY=FALSE))}else{0}) +
+                                    (if(Ltest){Reduce('+',mapply('*',d2S_domega1_domega2_1[leftcensored],1/(1-S1[leftcensored]),SIMPLIFY=FALSE)) - Reduce('+',mapply('*',cross_dS_domega_1[leftcensored],1/(1-S1[leftcensored])^2,SIMPLIFY=FALSE))}else{0}) +
                                     (if(Itest){Reduce('+',mapply('*',mapply('-',d2S_domega1_domega2_1[intervalcensored],d2S_domega1_domega2_2[intervalcensored],SIMPLIFY=FALSE),1/(S1[intervalcensored]-S2[intervalcensored]),SIMPLIFY=FALSE)) - Reduce('+',mapply('*',mapply(function(a,b,c,d){a-b-c+d},cross_dS_domega_1[intervalcensored],cross_dS_domega_12[intervalcensored],cross_dS_domega_21[intervalcensored],cross_dS_domega_2[intervalcensored],SIMPLIFY=FALSE),1/(S1[intervalcensored]-S2[intervalcensored])^2,SIMPLIFY=FALSE))}else{0}) 
             hess_omega <- diag((dP_domega/control$omegajacobian(omegaorig))*sapply(1:length(omega),function(i){control$omegahessian[[i]](omegaorig[i])}),length(omega)) + hess_omega * outer(control$omegajacobian(omegaorig),control$omegajacobian(omegaorig))
             # note, have dP_domega/control$omegajacobian(omegaorig) to get onto correct scale since further above in the computation of dP_domega we have control$omegajacobian(omegaorig)*dP_domega
             
             hess_omega_beta <- (if(Utest){-t(sapply(d2J_domega_dbeta_1,function(x){colSums(x[notcensored,,drop=FALSE])}))}else{0}) - 
                                     (if(Rtest){t(sapply(d2J_domega_dbeta_1,function(x){colSums(x[rightcensored,,drop=FALSE])}))}else{0}) - 
-                                    (if(Ltest){Reduce('+',mapply('*',d2S_domega_dbeta_1[lefttruncated],1/(1-S1[lefttruncated]),SIMPLIFY=FALSE)) - Reduce('+',mapply('*',cross_dS_domega_dbeta_1[lefttruncated],1/(1-S1[lefttruncated])^2,SIMPLIFY=FALSE))}else{0}) +
+                                    (if(Ltest){Reduce('+',mapply('*',d2S_domega_dbeta_1[leftcensored],1/(1-S1[leftcensored]),SIMPLIFY=FALSE)) - Reduce('+',mapply('*',cross_dS_domega_dbeta_1[leftcensored],1/(1-S1[leftcensored])^2,SIMPLIFY=FALSE))}else{0}) +
                                     (if(Itest){Reduce('+',mapply('*',mapply('-',d2S_domega_dbeta_1[intervalcensored],d2S_domega_dbeta_2[intervalcensored],SIMPLIFY=FALSE),1/(S1[intervalcensored]-S2[intervalcensored]),SIMPLIFY=FALSE)) - Reduce('+',mapply('*',mapply(function(a,b,c,d){a-b-c+d},cross_dS_domega_dbeta_1[intervalcensored],cross_dS_domega_dbeta_12[intervalcensored],cross_dS_domega_dbeta_21[intervalcensored],cross_dS_domega_dbeta_2[intervalcensored],SIMPLIFY=FALSE),1/(S1[intervalcensored]-S2[intervalcensored])^2,SIMPLIFY=FALSE))}else{0})
             hess_omega_beta <- control$omegajacobian(omegaorig)*hess_omega_beta 
             
-#            hess_gamma <- (if(Utest){-colSums(d2J_dgamma2_1[notcensored,,drop=FALSE])}else{0}) - 
-#                                    (if(Rtest){colSums(d2J_dgamma2_1[rightcensored,,drop=FALSE])}else{0}) -
-#                                    (if(Ltest){colSums((1/(1-S1[lefttruncated]))*d2S_dgamma2_1[lefttruncated,,drop=FALSE]) - colSums((1/(1-S1[lefttruncated])^2)*cross_dS_dgamma_1[lefttruncated,,drop=FALSE])}else{0}) +
-#                                    (if(Itest){colSums((1/(S1[intervalcensored]-S2[intervalcensored]))*(d2S_dgamma2_1-d2S_dgamma2_2)[intervalcensored,,drop=FALSE]) - colSums((1/(S1[intervalcensored]-S2[intervalcensored])^2)*(cross_dS_dgamma_1-cross_dS_dgamma_12-cross_dS_dgamma_21+cross_dS_dgamma_2)[intervalcensored,,drop=FALSE])}else{0})
+            bitsnbobs <- matrix(0,control$Mext,control$Next)
+            
+            bitsnbobs[control$uqidx] <- bitsnbobs[control$uqidx] + 
+                                    (if(Utest){sapply(control$uqidx,function(i){sum(-J1[notcensored & control$idx==i])})}else{0}) +
+                                    (if(Rtest){sapply(control$uqidx,function(i){sum(-J1[rightcensored & control$idx==i])})}else{0}) -
+                                    (if(Ltest){sapply(control$uqidx,function(i){sum((S1*(J1^2-J1)/(1-S1)+(J1*S1/(1-S1))^2)[notcensored & control$idx==i])})}else{0}) +
+                                    (if(Itest){sapply(control$uqidx,function(i){sum(((1/(S1-S2))*(S1*(J1^2-J1)-S2*(J2^2-J2))-(1/(S1-S2)^2)*(J1^2*S1^2-2*J1*J2*S1*S2+J2^2*S2^2))[intervalcensored & control$idx==i])})}else{0})          
+            hess_gamma <- as.vector(Re((1/(control$Mext*control$Next))*fft(covbase*fft(bitsnbobs,inverse=TRUE))))
         }
         
         
@@ -341,6 +356,7 @@ logPosterior_gridded <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,
     else{
         retlist <- list()
         retlist$logpost <- logpost
+        retlist$loglik <- loglik
         retlist$Y <- Ygrid
         if(gradient){
             retlist$grad <- grad

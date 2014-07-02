@@ -228,6 +228,11 @@ survspat <- function(   formula,
     
     print(SIGMA[1:8,1:8])
     
+    loglik <- c()
+    
+    gammamean <- 0
+    count <- 1
+    
     
     while(nextStep(mcmcloop)){
 
@@ -298,8 +303,26 @@ survspat <- function(   formula,
                 Ysamp <- rbind(Ysamp,as.vector(oldlogpost$Y))
             }
             tarrec <- c(tarrec,oldlogpost$logpost)
+            loglik <- c(loglik,oldlogpost$loglik)
+            gammamean <- ((count-1)/count)*gammamean + (1/count)*gamma
+            count <- count + 1
         }
     }
+    
+    # Compute DIC
+    Dhat <- -2*LOGPOST(  surv=survivaldata,
+                                X=X,
+                                beta=colMeans(betasamp),
+                                omega=colMeans(omegasamp),
+                                eta=colMeans(etasamp),
+                                gamma=gammamean,
+                                priors=priors,
+                                cov.model=cov.model,
+                                u=u,
+                                control=control,
+                                gradient=TRUE)$loglik
+    pD <- -2*mean(loglik) - Dhat
+    DIC <- Dhat + 2*pD
 
     retlist <- list()
     retlist$formula <- formula
@@ -330,6 +353,11 @@ survspat <- function(   formula,
     retlist$omegasamp <- omegasamp
     retlist$etasamp <- etasamp
     retlist$Ysamp <- Ysamp
+    
+    retlist$loglik <- loglik
+    retlist$Dhat <- Dhat
+    retlist$pD <- pD
+    retlist$DIC <- DIC
     
     retlist$X <- X
     retlist$survivaldata <- survivaldata
