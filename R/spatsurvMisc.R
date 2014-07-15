@@ -1,13 +1,71 @@
+##' getleneta function
+##'
+##' A function to compute the length of eta
+##'
+##' @param cov.model a covariance model 
+##' @return the length of eta
+
+getleneta <- function(cov.model){
+    if(inherits(cov.model,"fromRandomFieldsCovarianceFct")){
+        leneta <- 2
+    }
+    else if(inherits(cov.model,"fromUserFunction")){
+        leneta <- cov.model$npar
+    }
+    else{
+        stop("Unknkown covariance type")
+    }
+    return(leneta)
+} 
+
+
+##' getparranges function
+##'
+##' A function to extract parameter ranges for creating a grid on which to evaluate the log-posterior, used in calibrating the MCMC. This function
+##' is not intended for general use.
+##'
+##' @param priors an object of class mcmcPriors
+##' @param leneta the length of eta passed to the function 
+##' @param mult defaults to 1.96 so the grid formed will be mean plus/minus 1.96 times the standard deviation
+##' @return an appropriate range used to calibrate the MCMC: the mean of the prior for eta plus/minus 1.96 times the standard deviation
+##' @export
+
+getparranges <- function(priors,leneta,mult=1.96){
+    rgs <- list()
+    if(length(priors$etaprior$mean)==1 & length(priors$etaprior$sd)==1){
+        for(i in 1:leneta){
+            rgs[[i]] <- c(priors$etaprior$mean-mult*priors$etaprior$sd,priors$etaprior$mean+mult*priors$etaprior$sd)
+        }
+    }
+    else if(length(priors$etaprior$mean)==1 & length(priors$etaprior$sd)>1){
+        for(i in 1:leneta){
+            rgs[[i]] <- c(priors$etaprior$mean-mult*priors$etaprior$sd[i],priors$etaprior$mean+mult*priors$etaprior$sd[i])
+        }
+    }
+    else if(length(priors$etaprior$mean)>1 & length(priors$etaprior$sd)==1){
+        for(i in 1:leneta){
+            rgs[[i]] <- c(priors$etaprior$mean[i]-mult*priors$etaprior$sd,priors$etaprior$mean[i]+mult*priors$etaprior$sd)
+        }
+    }
+    else{
+        for(i in 1:leneta){
+            rgs[[i]] <- c(priors$etaprior$mean[i]-mult*priors$etaprior$sd[i],priors$etaprior$mean[i]+mult*priors$etaprior$sd[i])
+        }
+    } 
+    return(rgs)
+}    
+
 ##' gencens function
 ##'
 ##' A function to generate observed times given a vector of true survival times and a vector of censoring times. Used in the simulation of
-##' survival data
+##' survival data. 
 ##'
 ##' @param survtimes a vector of survival times 
 ##' @param censtimes a vector of censoring times for left or right censored data, 2-column matrix of censoring times for interval censoring (number of rows equal to the number of observations). 
 ##' @param type the type of censoring to generate can be 'right' (default), 'left' or 'interval' 
-##' @return a named list containing 'obstimes', the observed time of the event; and 'censored', the censoring indicator which is equal to 1 if the
-##' event is observed and 0 otherwise.
+##' @return an object of class 'Surv', the censoring indicator is equal to 1 if the
+##' event is uncensored and 0 otherwise for right/left censored data, or for interval censored data, the indicator is 0 uncensored, 1 right censored, 
+##' 2 left censored, or 3 interval censored.
 ##' @export
 
 
@@ -141,20 +199,26 @@ plotsurv <- function(spp,ss,maxcex=1,transform=identity,background=NULL,eventpt=
 
 ##' inference.control function
 ##'
-##' A function to control inferential settings. 
+##' A function to control inferential settings. This function is used to set parameters for more advanced use of spatsurv. 
 ##'
-##' @param gridded logical. Whether to perform compuation on a grid. Default is FALSE. Note in version 0.9-1, this is still in the testing phase.
+##' @param gridded logical. Whether to perform compuation on a grid. Default is FALSE.
 ##' @param cellwidth the width of computational cells to use 
-##' @param ext integer the number of times to extend the computational grid by in order to perform compuitation. The default is 2. 
+##' @param ext integer the number of times to extend the computational grid by in order to perform compuitation. The default is 2.
+##' @param MLinits optional initial values for the non-spatial maximum likelihood routine used to initialise the MCMC, a vector of length 
+##' equal to the number of parameters of the baseline hazard
+##' @param plotcal logical, whether to produce plots of the MCMC calibration process, this is a technical option and should onyl be set 
+##' to TRUE if poor mixing is evident (the printed h is low), then it is also useful to use a graphics device with multiple plotting windows. 
 ##' @return returns parameters to be used in the function survspat
 ##' @seealso \link{survspat}
 ##' @export
 
-inference.control <- function(gridded=FALSE,cellwidth=NULL,ext=2){
+inference.control <- function(gridded=FALSE,cellwidth=NULL,ext=2,MLinits=NULL,plotcal=FALSE){
     ans <- list()
     ans$gridded <- gridded
     ans$cellwidth <- cellwidth 
     ans$ext <- ext 
+    ans$MLinits <- MLinits
+    ans$plotcal <- plotcal
     class(ans) <- c("inference.control","list")
     return(ans)
 }
@@ -165,7 +229,7 @@ inference.control <- function(gridded=FALSE,cellwidth=NULL,ext=2){
 
 ##' getsurvdata function
 ##'
-##' A function to return the survival data from an object of class mcmcspatsurv
+##' A function to return the survival data from an object of class mcmcspatsurv. This function is not intended for general use.
 ##'
 ##' @param x an object of class mcmcspatsurv 
 ##' @return the survival data from an object of class mcmcspatsurv
@@ -216,32 +280,33 @@ checkSurvivalData <- function(s){
 
 ##' setupHazard function
 ##'
-##' A function to 
+##' A function to set up the baseline hazard, cumulative hazard and derivative functions for use in evaluating the log posterior. 
+##' This fucntion is not intended for general use.
 ##'
-##' @param dist X
-##' @param pars X
-##' @param grad X
-##' @param hess X 
-##' @return ...
+##' @param dist an object of class 'basehazardspec'
+##' @param pars parameters with which to create the functions necessary to evaluate the log posterior
+##' @param grad logical, whetether to create gradient functions for the baseline hazard and cumulative hazard
+##' @param hess logical, whetether to create hessian functions for the baseline hazard and cumulative hazard
+##' @return a list of functions used in evaluating the log posterior
 ##' @export
 
 setupHazard <- function(dist,pars,grad=FALSE,hess=FALSE){
     funlist <- list()
     
-    funlist$h <- get(paste("basehazard.",dist,sep=""))(pars)
+    funlist$h <- basehazard(dist)(pars)
     if(grad){
-        funlist$gradh <- get(paste("gradbasehazard.",dist,sep=""))(pars)
+        funlist$gradh <- gradbasehazard(dist)(pars)
     }
     if(hess){
-        funlist$hessh <- get(paste("hessbasehazard.",dist,sep=""))(pars)
+        funlist$hessh <- hessbasehazard(dist)(pars)
     }
     
-    funlist$H <- get(paste("cumbasehazard.",dist,sep=""))(pars)
+    funlist$H <- cumbasehazard(dist)(pars)
     if(grad){
-        funlist$gradH <- get(paste("gradcumbasehazard.",dist,sep=""))(pars)
+        funlist$gradH <- gradcumbasehazard(dist)(pars)
     }
     if(hess){
-        funlist$hessH <- get(paste("hesscumbasehazard.",dist,sep=""))(pars)
+        funlist$hessH <- hesscumbasehazard(dist)(pars)
     }
     
     return(funlist) 
@@ -250,11 +315,13 @@ setupHazard <- function(dist,pars,grad=FALSE,hess=FALSE){
 
 ##' invtransformweibull function
 ##'
-##' A function to transform estimates of the parameters of the weibull baseline hazard function, so they are commensurate with R's inbuilt density functions.
+##' A function to transform estimates of the (alpha, lambda) parameters of the weibull baseline hazard function, so they are commensurate 
+##' with R's inbuilt density functions, (shape, scale).
 ##'
 ##' @param x a vector of paramters
 ##' @return the transformed parameters. For the weibull model, this transforms 'shape' 'scale' (see ?dweibull) to 'alpha' and 'lambda' for the MCMC
 ##' @export
+
 invtransformweibull <- function(x){
     a <- x[1] # shape
     b <- x[2] # scale
@@ -270,11 +337,13 @@ invtransformweibull <- function(x){
 
 ##' transformweibull function
 ##'
-##' A function to transform estimates of the parameters of the weibull baseline hazard function, so they are commensurate with R's inbuilt density functions.
+##' A function to back-transform estimates of the parameters of the weibull baseline hazard function, so they are commensurate with R's inbuilt density functions. 
+##' Transforms from (shape, scale) to (alpha, lambda)
 ##'
 ##' @param x a vector of paramters
 ##' @return the transformed parameters. For the weibull model, this is the back-transform from 'alpha' and 'lambda' to 'shape' 'scale' (see ?dweibull).
 ##' @export
+
 transformweibull <- function(x){
 
     alpha <- x[1]
@@ -286,4 +355,17 @@ transformweibull <- function(x){
     ans <- c(shape=shape,scale=scale)    
     
     return(ans)
+}
+
+
+
+##' spatsurvVignette function
+##'
+##' Display the introductory vignette for the spatsurv package. 
+##'
+##' @return displays the vignette by calling browseURL
+##' @export
+
+spatsurvVignette <- function(){
+    browseURL("www.lancaster.ac.uk/staff/taylorb1/preprints/spatsurv.pdf") 
 }

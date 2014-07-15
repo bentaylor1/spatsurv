@@ -1,39 +1,3 @@
-##' proposalvariance_nospat function
-##'
-##' A function to compute an approximate scaling matrix for use with MCMC algorithms. Works for models with baseline hazard derived from the
-##' exponential survival model and assumes no frailties i.e. this is used for a non-spatial survival analysis.
-##'
-##' @param X matrix of covariates 
-##' @param delta censoring indicator, a vector 
-##' @param tm observed event times, a vector
-##' @param betahat an estimate of beta 
-##' @param omegahat an estimate of omega
-##' @param betapriorsd standard deviation of the prior for beta 
-##' @param omegapriorsd standard deviation of the prior for omega
-##' @return ...
-##' @export
-
-proposalvariance_exponential_nospat <- function(X,delta,tm,betahat,omegahat,betapriorsd,omegapriorsd){
-    N <- nrow(X)
-    d <- ncol(X)
-    sigma <- matrix(NA,d+1,d+1)
-    Xbetahat <- X%*%betahat
-    expXbetahat <- exp(Xbetahat)
-    
-    for(k in 1:d){
-        for(l in 1:d){
-            sigma[k,l] <- sum(-X[,k]*X[,l]*expXbetahat*exp(omegahat)*tm) - as.numeric(k==l)/betapriorsd^2
-        }
-        sigma[k,d+1] <- sigma[d+1,k] <- sum(-X[,k]*expXbetahat*exp(omegahat)*tm) 
-    }
-    sigma[d+1,d+1] <- -sum(expXbetahat*exp(omegahat)*tm) - 1/omegapriorsd^2
-    
-    return(solve(-sigma))      
-}
-
-
-
-
 ##' QuadApprox function
 ##'
 ##' A function to compute the second derivative of a function (of several real variables) using a quadratic approximation  on a 
@@ -48,7 +12,7 @@ proposalvariance_exponential_nospat <- function(X,delta,tm,betahat,omegahat,beta
 ##' @export
 
 
-QuadApprox <- function(fun,npts,argRanges,plot=TRUE,...){
+QuadApprox <- function(fun,npts,argRanges,plot=FALSE,...){
 
     npar <- length(argRanges)
     vals <- lapply(argRanges,function(x){seq(x[1],x[2],length.out=npts)})
@@ -134,10 +98,12 @@ QuadApprox <- function(fun,npts,argRanges,plot=TRUE,...){
 
 ##' fixmatrix function
 ##'
-##' A function to 
+##' !! THIS FUNCTION IS NOT INTENDED FOR GENERAL USE !!
 ##'
-##' @param mat X 
-##' @return ...
+##' A function to fix up an estimated covariance matrix using a VERY ad-hoc method.
+##'
+##' @param mat a matrix
+##' @return the fixed matrix
 ##' @export
 
 fixmatrix <- function(mat){
@@ -229,18 +195,18 @@ fixmatrix <- function(mat){
 
 ##' proposalVariance function
 ##'
-##' A function to 
+##' A function to compute an approximate scaling matrix for the MCMC algorithm. Not intended for general use. 
 ##'
-##' @param X X 
-##' @param surv X 
-##' @param betahat X 
-##' @param omegahat X 
-##' @param Yhat X 
-##' @param priors X 
-##' @param cov.model X 
-##' @param u X 
-##' @param control X 
-##' @return ...
+##' @param X the design matrix, containing covariate information 
+##' @param surv an object of class Surv 
+##' @param betahat an estimate of beta 
+##' @param omegahat an estimate of omega 
+##' @param Yhat an estimate of Y 
+##' @param priors the priors 
+##' @param cov.model the spatial covariance model 
+##' @param u a vector of pairwise distances 
+##' @param control a list containg various control parameters for the MCMC and post-processing routines 
+##' @return an estimate of eta and also an approximate scaling matrix for the MCMC
 ##' @export
 
 proposalVariance <- function(X,surv,betahat,omegahat,Yhat,priors,cov.model,u,control){
@@ -257,11 +223,11 @@ proposalVariance <- function(X,surv,betahat,omegahat,Yhat,priors,cov.model,u,con
     # eta
     logpost <- function(eta,surv,X,beta,omega,Y,priors,cov.model,u,control){
 
-        etapars <- sapply(1:cov.model$npar,function(i){cov.model$itrans[[i]](eta[i])})
+        etapars <- cov.model$itrans(eta)
         sigma <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etapars),n,n)
         cholsigma <- t(chol(sigma))
         cholsigmainv <- solve(cholsigma)
-        MU <- -cov.model$itrans[[control$sigmaidx]](eta[control$sigmaidx])^2/2
+        MU <- -etapars[control$sigmaidx]^2/2
         gamma <- cholsigmainv%*%(Y-MU)  
         
         logpost <- logPosterior(surv=surv,X=X,beta=beta,omega=omega,eta=eta,gamma=gamma,priors=priors,cov.model=cov.model,u=u,control=control)        
@@ -274,7 +240,7 @@ proposalVariance <- function(X,surv,betahat,omegahat,Yhat,priors,cov.model,u,con
         npts <- 10
     }
     rgs <- getparranges(priors=priors,leneta=leneta)   
-    qa <- QuadApprox(logpost,npts=npts,argRanges=rgs,surv=surv,X=X,beta=betahat,omega=omegahat,Y=Yhat,priors=priors,cov.model=cov.model,u=u,control=control)
+    qa <- QuadApprox(logpost,npts=npts,argRanges=rgs,plot=control$plotcal,surv=surv,X=X,beta=betahat,omega=omegahat,Y=Yhat,priors=priors,cov.model=cov.model,u=u,control=control)
     
     matr <- qa$curvature
     etahat <- qa$max
@@ -283,10 +249,10 @@ proposalVariance <- function(X,surv,betahat,omegahat,Yhat,priors,cov.model,u,con
     sigma[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)] <- matr    
         
     #estimate of gamma
-    etahatpars <- sapply(1:cov.model$npar,function(i){cov.model$itrans[[i]](etahat[i])})  
+    etahatpars <- cov.model$itrans(etahat)  
     ssigma <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etahatpars),n,n)
     cholssigma <- t(chol(ssigma))
-    MU <- -cov.model$itrans[[control$sigmaidx]](etahat[control$sigmaidx])^2/2
+    MU <- -etahatpars[control$sigmaidx]^2/2
     gammahat <- solve(cholssigma)%*%(Yhat-MU)
     
     hessian <- logPosterior(surv=surv,X=X,beta=betahat,omega=omegahat,eta=etahat,gamma=gammahat,priors=priors,cov.model=cov.model,u=u,control=control,hessian=TRUE)
@@ -307,18 +273,18 @@ proposalVariance <- function(X,surv,betahat,omegahat,Yhat,priors,cov.model,u,con
 
 ##' proposalVariance_gridded function
 ##'
-##' A function to 
+##' A function to compute an approximate scaling matrix for the MCMC algorithm. Not intended for general use. 
 ##'
-##' @param X X 
-##' @param surv X 
-##' @param betahat X 
-##' @param omegahat X 
-##' @param Yhat X 
-##' @param priors X 
-##' @param cov.model X 
-##' @param u X 
-##' @param control X 
-##' @return ...
+##' @param X the design matrix, containing covariate information 
+##' @param surv an object of class Surv 
+##' @param betahat an estimate of beta 
+##' @param omegahat an estimate of omega 
+##' @param Yhat an estimate of Y 
+##' @param priors the priors 
+##' @param cov.model the spatial covariance model 
+##' @param u a vector of pairwise distances 
+##' @param control a list containg various control parameters for the MCMC and post-processing routines 
+##' @return an estimate of eta and also an approximate scaling matrix for the MCMC
 ##' @export
 
 proposalVariance_gridded <- function(X,surv,betahat,omegahat,Yhat,priors,cov.model,u,control){
@@ -335,13 +301,12 @@ proposalVariance_gridded <- function(X,surv,betahat,omegahat,Yhat,priors,cov.mod
     # eta
     logpost <- function(eta,surv,X,beta,omega,Ygrid,priors,cov.model,u,control){
         
-        etapars <- sapply(1:cov.model$npar,function(i){cov.model$itrans[[i]](eta[i])})
+        etapars <- cov.model$itrans(eta)
         covbase <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etapars),control$Mext,control$Next)
         
         rootQeigs <- sqrt(1/Re(fft(covbase)))   
        
-        pars <- sapply(1:length(eta),function(i){cov.model$itrans[[i]](eta[i])})
-        ymean <- -pars[which(cov.model$parnames=="sigma")]^2/2
+        ymean <- -etapars[control$sigmaidx]^2/2
         gamma <- GammafromY(Ygrid,rootQeigs=rootQeigs,mu=ymean)  
         
         logpost <- logPosterior_gridded(surv=surv,X=X,beta=beta,omega=omega,eta=eta,gamma=gamma,priors=priors,cov.model=cov.model,u=u,control=control)        
@@ -354,7 +319,7 @@ proposalVariance_gridded <- function(X,surv,betahat,omegahat,Yhat,priors,cov.mod
         npts <- 10
     }
     rgs <- getparranges(priors=priors,leneta=leneta)   
-    qa <- QuadApprox(logpost,npts=npts,argRanges=rgs,surv=surv,X=X,beta=betahat,omega=omegahat,Ygrid=Ygrid,priors=priors,cov.model=cov.model,u=u,control=control)
+    qa <- QuadApprox(logpost,npts=npts,argRanges=rgs,plot=control$plotcal,surv=surv,X=X,beta=betahat,omega=omegahat,Ygrid=Ygrid,priors=priors,cov.model=cov.model,u=u,control=control)
     
     matr <- qa$curvature
     etahat <- qa$max
@@ -365,11 +330,10 @@ proposalVariance_gridded <- function(X,surv,betahat,omegahat,Yhat,priors,cov.mod
     sigma[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)] <- matr    
         
     #estimate of gamma
-    etahatpars <- sapply(1:cov.model$npar,function(i){cov.model$itrans[[i]](etahat[i])})  
+    etahatpars <- cov.model$itrans(etahat)  
     covbase <- matrix(EvalCov(cov.model=cov.model,u=u,parameters=etahatpars),control$Mext,control$Next)        
     rootQeigs <- sqrt(1/Re(fft(covbase)))   
-    pars <- sapply(1:length(etahat),function(i){cov.model$itrans[[i]](etahat[i])})
-    ymean <- -pars[which(cov.model$parnames=="sigma")]^2/2
+    ymean <- -etahatpars[control$sigmaidx]^2/2
     gammahat <- GammafromY(Ygrid,rootQeigs=rootQeigs,mu=ymean)
     
     hessian <- logPosterior_gridded(surv=surv,X=X,beta=betahat,omega=omegahat,eta=etahat,gamma=gammahat,priors=priors,cov.model=cov.model,u=u,control=control,hessian=TRUE)
@@ -398,25 +362,44 @@ proposalVariance_gridded <- function(X,surv,betahat,omegahat,Yhat,priors,cov.mod
 
 ##' estimateY function
 ##'
-##' A function to 
+##' A function to get an initial estimate of Y, to be used in calibrating the MCMC. Not for general use
 ##'
-##' @param X X 
-##' @param betahat X 
-##' @param omegahat X 
-##' @param surv X
-##' @param control X 
-##' @return ...
+##' @param X the design matrix containing covariate information 
+##' @param betahat an estimate of beta 
+##' @param omegahat an estimate of omega 
+##' @param surv an object of class Surv
+##' @param control a list containg various control parameters for the MCMC and post-processing routines 
+##' @return an estimate of Y, to be used in calibrating the MCMC
 ##' @export
 
 estimateY <- function(X,betahat,omegahat,surv,control){
-
-    censoringtype <- attr(surv,"type")
    
     omega <- control$omegaitrans(omegahat) # this is omega on the correct scale
     
-    haz <- setupHazard(dist=control$dist,pars=omega,grad=FALSE,hess=FALSE)
+    haz <- setupHazard(dist=control$dist,pars=omega,grad=FALSE,hess=FALSE)    
+    
+    tsubs <- guess_t(surv)   
+    
+    Y <- -X%*%betahat - log(haz$H(tsubs)) # greedy estimate of Y (maximise individual contributions to log-likelihood) ... note log(delta) is now omitted  
 
-    n <- nrow(X)
+    return(Y)    
+}
+
+
+
+##' guess_t function
+##'
+##' A function to get an initial guess of the failure time t, to be used in calibrating the MCMC. Not for general use
+##'
+##' @param surv an object of class Surv 
+##' @return a guess at the failure times
+##' @export
+
+guess_t <- function(surv){
+
+    n <- nrow(surv)
+    
+    censoringtype <- attr(surv,"type")
     
     if(censoringtype=="left" | censoringtype=="right"){
         notcensored <- surv[,"status"]==1
@@ -471,9 +454,6 @@ estimateY <- function(X,betahat,omegahat,surv,control){
 
     }
     
-    
-    
-    Y <- -X%*%betahat - log(haz$H(tsubs)) # greedy estimate of Y (maximise individual contributions to log-likelihood) ... note log(delta) is now omitted  
+    return(tsubs)
 
-    return(Y)    
 }

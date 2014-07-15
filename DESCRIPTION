@@ -6,8 +6,7 @@ Version: 0.9-6
 Date: 2013-12-12
 Author: Benjamin M. Taylor and Barry S. Rowlingson
 Maintainer: Benjamin M. Taylor <b.taylor1@lancaster.ac.uk>
-Description: Survival analysis with parametric proportional hazards models where
-    the events have been geo-located.
+Description: an R Package for Bayesian Inference with Spatial Survival Models
 License: GPL-3
 Depends:
     survival,
@@ -17,8 +16,8 @@ Imports:
     RandomFields,
     fields,
     rgl,
-    Matrix
+    Matrix,
+    stringr
 Suggests:
     rgdal,
-    gpclib,
-    mcmcplots
+    gpclib

@@ -10,16 +10,24 @@
 
   \item{probs}{vector of quantiles to return}
 
-  \item{digits}{see help file for format}
+  \item{digits}{see help file ?format}
 
-  \item{scientific}{see help file for format}
+  \item{scientific}{see help file ?format}
 
-  \item{...}{additional arguments}
+  \item{...}{additional arguments, not used here}
 }
 \value{
-summary tables
+prints summary tables to the console
 }
 \description{
 A function to print summary tables from an MCMC run
+}
+\seealso{
+\link{quantile.mcmcspatsurv}, \link{summary.mcmcspatsurv},
+\link{vcov.mcmcspatsurv}, \link{frailtylag1},
+\link{spatialpars}, \link{hazardpars}, \link{fixedpars},
+\link{randompars}, \link{baselinehazard},
+\link{predict.mcmcspatsurv}, \link{priorposterior},
+\link{posteriorcov}, \link{MCE}, \link{hazardexceedance}
 }
 

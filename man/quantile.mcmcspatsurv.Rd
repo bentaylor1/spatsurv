@@ -5,17 +5,26 @@
 \method{quantile}{mcmcspatsurv}(x, probs = c(0.025, 0.5, 0.975), ...)
 }
 \arguments{
-  \item{x}{an object of class mcmc spatsurv}
+  \item{x}{an object inheriting class mcmcspatsurv}
 
   \item{probs}{vector of probabilities}
 
-  \item{...}{other arguments to be passed to the function}
+  \item{...}{other arguments to be passed to the function,
+  not used here}
 }
 \value{
-...
+quantiles of model parameters
 }
 \description{
 A function to extract quantiles of the parameters from an
 mcmc run
+}
+\seealso{
+\link{print.mcmcspatsurv}, \link{summary.mcmcspatsurv},
+\link{vcov.mcmcspatsurv}, \link{frailtylag1},
+\link{spatialpars}, \link{hazardpars}, \link{fixedpars},
+\link{randompars}, \link{baselinehazard},
+\link{predict.mcmcspatsurv}, \link{priorposterior},
+\link{posteriorcov}, \link{MCE}, \link{hazardexceedance}
 }
 

@@ -1,14 +1,21 @@
 ##' mcmcPriors function
 ##'
-##' A function to define priors for mcmc
-##'
+##' A function to define priors for the MCMC.
+##' 
+##' The package \code{spatsurv} only provides functionality for the built-in Gaussian priors. However, the choice of prior is 
+##' extensible by the user by creating functions similar to the functions \code{betapriorGauss}, \code{omegapriorGauss}, \code{etapriorGauss}, 
+##' \code{indepGaussianprior} and \code{derivindepGaussianprior}: the first three of which provide a mechanism for storing and retrieving the 
+##' parameters of the priors; the fourth, a function for evaluating the log of the prior for a given set of parameter values; and the fifth, a 
+##' function for evaluating the first and second derivatives of the log of the prior. It is assumed that parameters are a priori independent. 
+##' The user interested in using other priors is encouraged to look at the structure of the five functions mentioned above.
+##' 
 ##' @param betaprior prior for beta, the covariate effects
 ##' @param omegaprior prior for omega, the parameters of the baseline hazard
 ##' @param etaprior prior for eta, the parameters of the latent field
 ##' @param call function to evaluate the log-prior e.g. logindepGaussianprior
 ##' @param derivative function to evaluate the first and second derivatives of the prior 
-##' @return an onject of class mcmcPriors
-##' @seealso \link{survspat},
+##' @return an object of class mcmcPriors
+##' @seealso \link{survspat}, \link{betapriorGauss}, \link{omegapriorGauss}, \link{etapriorGauss}, \link{indepGaussianprior}, \link{derivindepGaussianprior}
 ##' @export
 
 mcmcPriors <- function(betaprior=NULL,omegaprior=NULL,etaprior=NULL,call=NULL,derivative=NULL){
@@ -26,11 +33,12 @@ mcmcPriors <- function(betaprior=NULL,omegaprior=NULL,etaprior=NULL,call=NULL,de
 
 ##' betapriorGauss function
 ##'
-##' A function to define Gaussian priors for beta.
+##' A function to define Gaussian priors for beta. This function simply stores a vector of means and standard deviations to be passed to the main MCMC function, survspat.
 ##'
 ##' @param mean the prior mean, a vector of length 1 or more. 1 implies a common mean.
 ##' @param sd the prior standard deviation, a vector of length 1 or more. 1 implies a common standard deviation.
 ##' @return an object of class "betapriorGauss"
+##' @seealso \link{survspat}, \link{betapriorGauss}, \link{omegapriorGauss}, \link{etapriorGauss}, \link{indepGaussianprior}, \link{derivindepGaussianprior}
 ##' @export
 
 betapriorGauss <- function(mean,sd){
@@ -45,11 +53,12 @@ betapriorGauss <- function(mean,sd){
 
 ##' omegapriorGauss function
 ##'
-##' A function to define Gaussian priors for omega.
+##' A function to define Gaussian priors for omega. This function simply stores a vector of means and standard deviations to be passed to the main MCMC function, survspat.
 ##'
 ##' @param mean the prior mean, a vector of length 1 or more. 1 implies a common mean.
 ##' @param sd the prior standard deviation, a vector of length 1 or more. 1 implies a common standard deviation.
 ##' @return an object of class "omegapriorGauss"
+##' @seealso \link{survspat}, \link{betapriorGauss}, \link{omegapriorGauss}, \link{etapriorGauss}, \link{indepGaussianprior}, \link{derivindepGaussianprior}
 ##' @export
 
 omegapriorGauss <- function(mean,sd){
@@ -64,11 +73,12 @@ omegapriorGauss <- function(mean,sd){
 
 ##' etapriorGauss function
 ##'
-##' A function to define Gaussian priors for eta.
+##' A function to define Gaussian priors for eta. This function simply stores a vector of means and standard deviations to be passed to the main MCMC function, survspat.
 ##'
 ##' @param mean the prior mean, a vector of length 1 or more. 1 implies a common mean.
 ##' @param sd the prior standard deviation, a vector of length 1 or more. 1 implies a common standard deviation.
 ##' @return an object of class "etapriorGauss"
+##' @seealso \link{survspat}, \link{betapriorGauss}, \link{omegapriorGauss}, \link{etapriorGauss}, \link{indepGaussianprior}, \link{derivindepGaussianprior}
 ##' @export
 
 etapriorGauss <- function(mean,sd){
@@ -84,13 +94,14 @@ etapriorGauss <- function(mean,sd){
 
 ##' indepGaussianprior function
 ##'
-##' A function to evaluate the prior for independent normals
+##' A function for evaluating the log of an independent Gaussian prior for a given set of parameter values.
 ##'
 ##' @param beta parameter beta at which prior is to be evaluated 
 ##' @param omega parameter omega at which prior is to be evaluated
 ##' @param eta parameter eta at which prior is to be evaluated
 ##' @param priors an object of class mcmcPriors, see ?mcmcPriors
-##' @return the log prior
+##' @return the log of the prior evaluated at the given parameter values
+##' @seealso \link{survspat}, \link{betapriorGauss}, \link{omegapriorGauss}, \link{etapriorGauss}, \link{indepGaussianprior}, \link{derivindepGaussianprior}
 ##' @export
 
 indepGaussianprior <- function(beta=NULL,omega=NULL,eta=NULL,priors){
@@ -114,13 +125,14 @@ indepGaussianprior <- function(beta=NULL,omega=NULL,eta=NULL,priors){
 
 ##' derivindepGaussianprior function
 ##'
-##' A function to compute the first and second derivatives of the log-density assuming independent Gaussian priors for each of the parameters.
+##' A function for evaluating the first and second derivatives of the log of an independent Gaussian prior
 ##'
 ##' @param beta a vector, the parameter beta
 ##' @param omega a vector, the parameter omega
 ##' @param eta a vector, the parameter eta 
 ##' @param priors an object of class 'mcmcPrior', see ?mcmcPrior
-##' @return ...
+##' @return returns the first and second derivatives of the prior
+##' @seealso \link{survspat}, \link{betapriorGauss}, \link{omegapriorGauss}, \link{etapriorGauss}, \link{indepGaussianprior}, \link{derivindepGaussianprior}
 ##' @export
 
 derivindepGaussianprior <- function(beta=NULL,omega=NULL,eta=NULL,priors){
@@ -137,6 +149,6 @@ derivindepGaussianprior <- function(beta=NULL,omega=NULL,eta=NULL,priors){
     if (length(priors$etaprior$sd)<length(eta)){
         sdeta <- rep(priors$etaprior$sd,length(eta))
     }
-    deriv2 <- c(-1/sdbeta^2,-1/sdomega^2,-1/sdeta^2)
+    deriv2 <- diag(c(-1/sdbeta^2,-1/sdomega^2,-1/sdeta^2)) # in fact, the 2nd derivative with respect to eta is not necessary, as this is dealt with elsewhere.
     return(list(deriv1=deriv1,deriv2=deriv2))
 }

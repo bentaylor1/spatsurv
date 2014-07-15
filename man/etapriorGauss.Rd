@@ -15,6 +15,13 @@ etapriorGauss(mean, sd)
 an object of class "etapriorGauss"
 }
 \description{
-A function to define Gaussian priors for eta.
+A function to define Gaussian priors for eta. This function
+simply stores a vector of means and standard deviations to
+be passed to the main MCMC function, survspat.
+}
+\seealso{
+\link{survspat}, \link{betapriorGauss},
+\link{omegapriorGauss}, \link{etapriorGauss},
+\link{indepGaussianprior}, \link{derivindepGaussianprior}
 }
 

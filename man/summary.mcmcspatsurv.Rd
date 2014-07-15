@@ -12,9 +12,17 @@
   \item{...}{additional arguments}
 }
 \value{
-summary tables
+summary tables to the console
 }
 \description{
-A function to print summary tables from an MCMC run
+A function to return summary tables from an MCMC run
+}
+\seealso{
+\link{print.mcmcspatsurv}, \link{quantile.mcmcspatsurv},
+\link{vcov.mcmcspatsurv}, \link{frailtylag1},
+\link{spatialpars}, \link{hazardpars}, \link{fixedpars},
+\link{randompars}, \link{baselinehazard},
+\link{predict.mcmcspatsurv}, \link{priorposterior},
+\link{posteriorcov}, \link{MCE}, \link{hazardexceedance}
 }
 

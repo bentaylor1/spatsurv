@@ -11,4 +11,8 @@ the exponential covariance function
 A function to declare and also evaluate an exponential
 covariance function.
 }
+\seealso{
+\link{SpikedExponentialCovFct}, \link{covmodel},
+\link{CovarianceFct}
+}
 

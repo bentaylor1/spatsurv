@@ -12,6 +12,7 @@ the survival data from an object of class mcmcspatsurv
 }
 \description{
 A function to return the survival data from an object of
-class mcmcspatsurv
+class mcmcspatsurv. This function is not intended for
+general use.
 }
 

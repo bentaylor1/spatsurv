@@ -13,11 +13,9 @@ mcmcpars(nits, burn, thin, inits = NULL, adaptivescheme = NULL)
   'thin' iteration (eg store output or compute some
   posterior functional)}
 
-  \item{inits}{optional initial values for MCMC}
+  \item{inits}{NOT CURRENTLY IN USE}
 
-  \item{adaptivescheme}{optional type of adaptive mcmc to
-  use, see ?constanth (constant h) or ?andrieuthomsh
-  (adaptive MCMC of Andrieu and Thoms (2008))}
+  \item{adaptivescheme}{NOT CURRENTLY IN USE}
 }
 \value{
 mcmc parameters

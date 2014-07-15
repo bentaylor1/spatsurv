@@ -15,11 +15,15 @@ derivindepGaussianprior(beta = NULL, omega = NULL, eta = NULL, priors)
   ?mcmcPrior}
 }
 \value{
-...
+returns the first and second derivatives of the prior
 }
 \description{
-A function to compute the first and second derivatives of
-the log-density assuming independent Gaussian priors for
-each of the parameters.
+A function for evaluating the first and second derivatives
+of the log of an independent Gaussian prior
+}
+\seealso{
+\link{survspat}, \link{betapriorGauss},
+\link{omegapriorGauss}, \link{etapriorGauss},
+\link{indepGaussianprior}, \link{derivindepGaussianprior}
 }
 

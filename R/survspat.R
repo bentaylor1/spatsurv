@@ -1,17 +1,19 @@
 ##' survspat function
 ##'
-##' A function to run a Bayesian analysis on right censored survial data assuming a proportional hazards model with
-##' baseline hazard derived from the exponential model.
+##' A function to run a Bayesian analysis on censored spatial survial data assuming a proportional hazards model using an adaptive Metropolis-adjusted
+##' Langevin algorithm.
 ##'
-##' @param formula see ?flexsurvreg 
-##' @param data a SpatialPointsDataFrame object
-##' @param dist choice of distribution function for baseline hazard options are: "exp"
-##' @param cov.model an object of class covmodel, see ?covmodel
+##' @param formula the model formula in a format compatible with the function flexsurvreg from the flexsurv package 
+##' @param data a SpatialPointsDataFrame object containing the survival data as one of the columns
+##' @param dist choice of distribution function for baseline hazard. Current options are: exponentialHaz, weibullHaz, gompertzHaz, makehamHaz, tpowHaz
+##' @param cov.model an object of class covmodel, see ?covmodel ?ExponentialCovFct or ?SpikedExponentialCovFct
 ##' @param mcmc.control mcmc control parameters, see ?mcmcpars
 ##' @param priors an object of class Priors, see ?mcmcPriors
 ##' @param control additional control parameters, see ?inference.control
-##' @return the mcmc output
-##' @seealso \link{inference.control}
+##' @return an object inheriting class 'mcmcspatsurv' for which there exist methods for printing, summarising and making inference from.
+##' @seealso \link{tpowHaz}, \link{exponentialHaz}, \link{gompertzHaz}, \link{makehamHaz}, \link{weibullHaz}, 
+##' \link{covmodel}, link{ExponentialCovFct}, \code{SpikedExponentialCovFct},
+##' \link{mcmcpars}, \link{mcmcPriors}, \link{inference.control} 
 ##' @export
 
 
@@ -22,6 +24,8 @@ survspat <- function(   formula,
                         mcmc.control,
                         priors,
                         control=inference.control(gridded=FALSE)){
+                        
+                            
     
     # initial checks
     if(!inherits(data,"SpatialPointsDataFrame")){
@@ -29,18 +33,19 @@ survspat <- function(   formula,
     }                    
     responsename <- as.character(formula[[2]])
     survivaldata <- data@data[[responsename]]
-    checkSurvivalData(survivaldata)                        
+    checkSurvivalData(survivaldata) 
+    
+    if(!inherits(data,"SpatialPointsDataFrame")){
+        stop("data must be an object of class SpatialPointsDataFrame")
+    }                     
 
     # okay, start the MCMC!
     start <- Sys.time()
 
-    if(!inherits(data,"SpatialPointsDataFrame")){
-        stop("data must be an object of class SpatialPointsDataFrame")
-    }
-    
     coords <- coordinates(data)
 
     control$dist <- dist
+    
     funtxt <- ""    
     if(control$gridded){
         funtxt <- "_gridded"
@@ -107,7 +112,7 @@ survspat <- function(   formula,
                         
     mcmcloop <- mcmcLoop(N=mcmc.control$nits,burnin=mcmc.control$burn,thin=mcmc.control$thin,progressor=mcmcProgressTextBar)                            
               
-    info <- get(paste("distinfo.",dist,sep=""))()
+    info <- distinfo(dist)()
     
     control$omegatrans <- info$trans
     control$omegaitrans <- info$itrans
@@ -309,6 +314,8 @@ survspat <- function(   formula,
         }
     }
     
+    colnames(Ysamp) <- paste("Y",1:ncol(Ysamp),sep="")
+    
     # Compute DIC
     Dhat <- -2*LOGPOST(  surv=survivaldata,
                                 X=X,
@@ -340,10 +347,20 @@ survspat <- function(   formula,
     #   Back transform for output
     ####
     
-    omegasamp <- control$omegaitrans(omegasamp)
+    if(length(omega)>1){
+        omegasamp <- t(apply(omegasamp,1,control$omegaitrans))
+    }
+    else{
+        omegasamp <- t(t(apply(omegasamp,1,control$omegaitrans)))
+    }
     colnames(omegasamp) <- info$parnames
     
-    etasamp <- sapply(1:length(cov.model$itrans),function(i){cov.model$itrans[[i]](etasamp[,i])})
+    if(length(eta)>1){
+        etasamp <- t(apply(etasamp,1,cov.model$itrans))
+    }
+    else{
+        etasamp <- t(t(apply(etasamp,1,cov.model$itrans)))
+    }
     colnames(etasamp) <- cov.model$parnames     
     
     ####    
@@ -377,6 +394,7 @@ survspat <- function(   formula,
     retlist$omegaitrans <- control$omegaitrans
     
     retlist$control <- control
+    retlist$censoringtype <- attr(survivaldata,"type")
     
     retlist$time.taken <- Sys.time() - start
     

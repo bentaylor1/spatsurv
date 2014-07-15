@@ -6,22 +6,32 @@ priorposterior(x, breaks = 30, ylab = "Density", main = "",
   pause = TRUE, ...)
 }
 \arguments{
-  \item{x}{X}
+  \item{x}{an object inheriting class mcmcspatsurv}
 
-  \item{breaks}{X}
+  \item{breaks}{see ?hist}
 
-  \item{ylab}{X}
+  \item{ylab}{optional y label}
 
-  \item{main}{X}
+  \item{main}{optional title}
 
-  \item{pause}{X}
+  \item{pause}{logical whether to pause between plots, the
+  default is TRUE}
 
-  \item{...}{X}
+  \item{...}{other arguments passed to the hist function}
 }
 \value{
-...
+plots of the prior (red line) and posterior (histogram).
 }
 \description{
-A function to
+A function to produce plots of the prior (which shows as a
+red line) and posterior (showing as a histogram)
+}
+\seealso{
+\link{print.mcmcspatsurv}, \link{quantile.mcmcspatsurv},
+\link{summary.mcmcspatsurv}, \link{vcov.mcmcspatsurv},
+\link{frailtylag1}, \link{spatialpars}, \link{hazardpars},
+\link{fixedpars}, \link{randompars}, \link{baselinehazard},
+\link{predict.mcmcspatsurv}, \link{posteriorcov},
+\link{MCE}, \link{hazardexceedance}
 }
 

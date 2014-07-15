@@ -5,14 +5,12 @@ par(mfrow=c(1,1))
 set.seed(10)
 
 n <- 100
-DIST <- "exp"
+DIST <- exponentialHaz()
 
-if(DIST=="exp"){
-    OMEGA <- 1
-}
-if(DIST=="weibull"){
-    OMEGA <- c(1,0.5)
-}
+
+OMEGA <- 1
+
+
 
 # Generate spatially correlated survival data ... 
 dat <- simsurv(X=cbind( age=runif(n,5,50),sex=rbinom(n,1,0.5),cancer=rbinom(n,1,0.2)),

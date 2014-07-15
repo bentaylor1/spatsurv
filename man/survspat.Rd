@@ -6,15 +6,18 @@ survspat(formula, data, dist, cov.model, mcmc.control, priors,
   control = inference.control(gridded = FALSE))
 }
 \arguments{
-  \item{formula}{see ?flexsurvreg}
+  \item{formula}{the model formula in a format compatible
+  with the function flexsurvreg from the flexsurv package}
 
-  \item{data}{a SpatialPointsDataFrame object}
+  \item{data}{a SpatialPointsDataFrame object containing
+  the survival data as one of the columns}
 
   \item{dist}{choice of distribution function for baseline
-  hazard options are: "exp"}
+  hazard. Current options are: exponentialHaz, weibullHaz,
+  gompertzHaz, makehamHaz, tpowHaz}
 
   \item{cov.model}{an object of class covmodel, see
-  ?covmodel}
+  ?covmodel ?ExponentialCovFct or ?SpikedExponentialCovFct}
 
   \item{mcmc.control}{mcmc control parameters, see
   ?mcmcpars}
@@ -25,14 +28,20 @@ survspat(formula, data, dist, cov.model, mcmc.control, priors,
   ?inference.control}
 }
 \value{
-the mcmc output
+an object inheriting class 'mcmcspatsurv' for which there
+exist methods for printing, summarising and making
+inference from.
 }
 \description{
-A function to run a Bayesian analysis on right censored
-survial data assuming a proportional hazards model with
-baseline hazard derived from the exponential model.
+A function to run a Bayesian analysis on censored spatial
+survial data assuming a proportional hazards model using an
+adaptive Metropolis-adjusted Langevin algorithm.
 }
 \seealso{
+\link{tpowHaz}, \link{exponentialHaz}, \link{gompertzHaz},
+\link{makehamHaz}, \link{weibullHaz}, \link{covmodel},
+link{ExponentialCovFct}, \code{SpikedExponentialCovFct},
+\link{mcmcpars}, \link{mcmcPriors},
 \link{inference.control}
 }
 

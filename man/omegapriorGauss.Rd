@@ -15,6 +15,14 @@ omegapriorGauss(mean, sd)
 an object of class "omegapriorGauss"
 }
 \description{
-A function to define Gaussian priors for omega.
+A function to define Gaussian priors for omega. This
+function simply stores a vector of means and standard
+deviations to be passed to the main MCMC function,
+survspat.
+}
+\seealso{
+\link{survspat}, \link{betapriorGauss},
+\link{omegapriorGauss}, \link{etapriorGauss},
+\link{indepGaussianprior}, \link{derivindepGaussianprior}
 }
 

@@ -6,24 +6,29 @@ NonSpatialLogLikelihood_or_gradient(surv, X, beta, omega, control,
   loglikelihood, gradient)
 }
 \arguments{
-  \item{surv}{X}
+  \item{surv}{an object of class Surv}
 
-  \item{X}{X}
+  \item{X}{the design matrix, containing covariate
+  information}
 
-  \item{beta}{X}
+  \item{beta}{parameter beta}
 
-  \item{omega}{X}
+  \item{omega}{parameter omega}
 
-  \item{control}{X}
+  \item{control}{a list containg various control parameters
+  for the MCMC and post-processing routines}
 
-  \item{loglikelihood}{X}
+  \item{loglikelihood}{logical whether to evaluate the
+  log-likelihood}
 
-  \item{gradient}{X}
+  \item{gradient}{logical whether to evaluate the gradient}
 }
 \value{
 ...
 }
 \description{
-A function to
+A function to evaluate the log-likelihood of a non-spatial
+parametric proportional hazards model. Not intended for
+general use.
 }
 

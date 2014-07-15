@@ -14,9 +14,8 @@ simsurv(X = cbind(age = runif(100, 5, 50), sex = rbinom(100, 1, 0.5), cancer =
 
   \item{beta}{the parameter effects}
 
-  \item{omega}{parameter for the baseline hazard model (the
-  rate for exponential data and the shape and scale for
-  Weibull data)}
+  \item{omega}{vector of parameters for the baseline hazard
+  model}
 
   \item{dist}{the distribution choice: exp or weibull at
   present}
@@ -38,18 +37,20 @@ simsurv(X = cbind(age = runif(100, 5, 50), sex = rbinom(100, 1, 0.5), cancer =
   convergence/mixing diagnostics}
 }
 \value{
-simulated survival times from the exponential model (the
-last simulated value from the MCMC chains)
+in list element 'survtimes', a vector of simulated survival
+times (the last simulated value from the MCMC chains) in
+list element 'T' the MCMC chains
 }
 \description{
 A function to simulate spatial parametric proportional
-hazards model with baseline hazard derived from the
-exponential or weibull model. The function works by
-simulating candidate survival times using MCMC in parallel
-for each individual based on each individual's covariates
-and the common parameter effects, beta.
+hazards model. The function works by simulating candidate
+survival times using MCMC in parallel for each individual
+based on each individual's covariates and the common
+parameter effects, beta.
 }
 \seealso{
-\link{covmodel}, \link{survspat}
+\link{covmodel}, \link{survspat}, \link{tpowHaz},
+\link{exponentialHaz}, \link{gompertzHaz},
+\link{makehamHaz}, \link{weibullHaz}
 }
 

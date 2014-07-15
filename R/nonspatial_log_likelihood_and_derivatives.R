@@ -1,11 +1,11 @@
 ##' maxlikparamPHsurv function
 ##'
-##' A function to 
+##' A function to get initial estimates of model parameters using maximum likelihood. Not intended for general purose use.
 ##'
-##' @param surv X 
-##' @param X X 
-##' @param control X 
-##' @return ...
+##' @param surv an object of class Surv
+##' @param X the design matrix, containing covariate information 
+##' @param control a list containg various control parameters for the MCMC and post-processing routines  
+##' @return initial estimates of the parameters
 ##' @export
 
 maxlikparamPHsurv <- function(surv,X,control){
@@ -25,9 +25,14 @@ maxlikparamPHsurv <- function(surv,X,control){
     
     betainit <- rep(0,ncol(X))
     
-    omegainit <- rep(0,get(paste("distinfo.",control$dist,sep=""))()$npars)
+    if(is.null(control$MLinits)){
+        omegainit <- rep(1e-10,distinfo(control$dist)()$npars)
+    }
     
-    opt <- optim(par=c(betainit,omegainit),fn=likfun,gr=gradfun,method="BFGS")
+    opt <- try(optim(par=c(betainit,omegainit),fn=likfun,gr=gradfun,method="BFGS"))
+    if(inherits(opt,"try-error")){
+        stop("Problem with initial values in obtaining maximum likelihood estimates of parameters, try setting MLinits in function inference.control")
+    }
     
     return(opt)
 }
@@ -35,15 +40,15 @@ maxlikparamPHsurv <- function(surv,X,control){
 
 ##' NonSpatialLogLikelihood_or_gradient function
 ##'
-##' A function to 
+##' A function to evaluate the log-likelihood of a non-spatial parametric proportional hazards model. Not intended for general use.
 ##'
-##' @param surv X 
-##' @param X X 
-##' @param beta X 
-##' @param omega X 
-##' @param control X 
-##' @param loglikelihood X 
-##' @param gradient X 
+##' @param surv an object of class Surv 
+##' @param X the design matrix, containing covariate information 
+##' @param beta parameter beta 
+##' @param omega parameter omega 
+##' @param control a list containg various control parameters for the MCMC and post-processing routines   
+##' @param loglikelihood logical whether to evaluate the log-likelihood
+##' @param gradient logical whether to evaluate the gradient
 ##' @return ...
 ##' @export
 

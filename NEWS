@@ -38,3 +38,23 @@ BUG FIXES
 SIGNIFICANT USER-VISIBLE CHANGES
    
     o Coding of additional survival models has been made easier. The ability to cope with left and interval censored data has been partly coded. 
+    
+
+    
+    	CHANGES IN spatsurv VERSION 0.9-6
+    	
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Parametrisation of some of the weibull model has changed from (shape, scale) to (alpha, lambda) with hazard lambda x alpha x t^(alpha-1) 
+    
+    o Additional baseline hazard models added: Gompertz (gompertzHaz), Gompertz-Makeham (makehamHaz), 'powers of t' (tpowHaz)
+    
+    o Mechanism for specifying model has now been changed and improved
+    
+    o Extensible user-defied baseline hazard functions
+    
+    o package vignette now available by typing 'spatsurvVignette()'
+    
+BUG FIXES  
+
+    o Various minor bugs have been fixed

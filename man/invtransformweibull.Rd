@@ -13,8 +13,9 @@ transforms 'shape' 'scale' (see ?dweibull) to 'alpha' and
 'lambda' for the MCMC
 }
 \description{
-A function to transform estimates of the parameters of the
-weibull baseline hazard function, so they are commensurate
-with R's inbuilt density functions.
+A function to transform estimates of the (alpha, lambda)
+parameters of the weibull baseline hazard function, so they
+are commensurate with R's inbuilt density functions,
+(shape, scale).
 }
 

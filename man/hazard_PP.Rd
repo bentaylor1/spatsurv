@@ -13,6 +13,6 @@ hazard_PP(inputs)
 the hazard function for the individual
 }
 \description{
-A function to compute the hazard function
+A function to compute an individual's hazard function.
 }
 

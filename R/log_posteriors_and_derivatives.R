@@ -1,20 +1,20 @@
 ##' logPosterior function
 ##'
-##' A function to 
+##' A function to evaluate the log-posterior of a spatial parametric proportional hazards model. Not intended for general use.
 ##'
-##' @param surv X 
-##' @param X X 
-##' @param beta X 
-##' @param omega X 
-##' @param eta X 
-##' @param gamma X 
-##' @param priors X 
-##' @param cov.model X 
-##' @param u X 
-##' @param control X 
-##' @param gradient X 
-##' @param hessian X 
-##' @return ...
+##' @param surv an object of class Surv 
+##' @param X the design matrix, containing covariate information 
+##' @param beta parameter beta 
+##' @param omega parameter omega 
+##' @param eta parameter eta 
+##' @param gamma parameter gamma 
+##' @param priors the priors, an object of class 'mcmcPriors' 
+##' @param cov.model the spatial covariance model 
+##' @param u vector of interpoint distances 
+##' @param control a list containg various control parameters for the MCMC and post-processing routines    
+##' @param gradient logical whether to evaluate the gradient
+##' @param hessian logical whether to evaluate the Hessian 
+##' @return evaluates the log-posterior and the gradient and hessian, if required.
 ##' @export
 
 logPosterior <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,control,gradient=FALSE,hessian=FALSE){
@@ -39,10 +39,10 @@ logPosterior <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,control,
     
     n <- nrow(X)
     
-    etapars <- sapply(1:cov.model$npar,function(i){cov.model$itrans[[i]](eta[i])})
+    etapars <- cov.model$itrans(eta) 
     sigma <- matrix(EvalCov(cov.model,u=u,parameters=etapars),n,n)
     cholsigma <- t(chol(sigma))
-    MU <- -cov.model$itrans[[control$sigmaidx]](eta[control$sigmaidx])^2/2
+    MU <- -etapars[control$sigmaidx]^2/2
     Y <- MU + cholsigma%*%gamma
     
     Xbeta <- X%*%beta
@@ -338,8 +338,8 @@ logPosterior <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,control,
         deriv2 <- do.call(priors$derivative,args=list(beta=beta,omega=omegaorig,eta=eta,priors=priors))$deriv2
         
         #tag on contributions from the prior ...
-        hess_beta <- hess_beta + diag(deriv2[1:length(beta)])
-        hess_omega <- hess_omega + diag(deriv2[(length(beta)+1):(length(beta)+length(omega))],length(omega))
+        hess_beta <- hess_beta + deriv2[1:length(beta),1:length(beta)]
+        hess_omega <- hess_omega + deriv2[(length(beta)+1):(length(beta)+length(omega)),(length(beta)+1):(length(beta)+length(omega))]
         hess_gamma <- hess_gamma - 1 # -1 comes from the prior
     }  
       

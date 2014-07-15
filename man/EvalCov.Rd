@@ -15,6 +15,7 @@ EvalCov(cov.model, u, parameters)
 method EvalCov
 }
 \description{
-Evaluate the covariance function
+This function is used to evaluate the covariance function
+within the MCMC run. Not intended for general use.
 }
 

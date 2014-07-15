@@ -8,10 +8,18 @@ hazardpars(x)
   \item{x}{an object of class mcmcspatsurv}
 }
 \value{
-the mcmc chains
+the omega mcmc chains
 }
 \description{
 A function to return the mcmc chains for the hazard
 function parameters
+}
+\seealso{
+\link{print.mcmcspatsurv}, \link{quantile.mcmcspatsurv},
+\link{summary.mcmcspatsurv}, \link{vcov.mcmcspatsurv},
+\link{frailtylag1}, \link{spatialpars}, \link{fixedpars},
+\link{randompars}, \link{baselinehazard},
+\link{predict.mcmcspatsurv}, \link{priorposterior},
+\link{posteriorcov}, \link{MCE}, \link{hazardexceedance}
 }
 

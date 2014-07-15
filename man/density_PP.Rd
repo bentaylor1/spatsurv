@@ -13,6 +13,6 @@ density_PP(inputs)
 the density function for the individual
 }
 \description{
-A function to compute the density function
+A function to compute an individual's density function
 }
 

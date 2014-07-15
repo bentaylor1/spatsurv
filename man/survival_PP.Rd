@@ -13,6 +13,6 @@ survival_PP(inputs)
 the survival function for the individual
 }
 \description{
-A function to compute the survival function
+A function to compute an individual's survival function
 }
 

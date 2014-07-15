@@ -5,7 +5,8 @@
 covmodel(model, pars)
 }
 \arguments{
-  \item{model}{correlation type, see ?CovarianceFct}
+  \item{model}{correlation type, a string see
+  ?CovarianceFct}
 
   \item{pars}{vector of additional parameters for certain
   classes of covariance function (eg Matern), these must be
@@ -17,6 +18,13 @@ an object of class covmodel
 }
 \description{
 A function to define the spatial covariance model, see also
-?getcov and ?CovarianceFct
+?CovarianceFct. Note that the parameters defined by the
+'pars' argument are fixed, i.e. not estimated by the MCMC
+algorithm. To have spatsurv estimate these parameters, the
+user must construct a new covariance function to do so, see
+the spatsurv vignette.
+}
+\seealso{
+\link{CovarianceFct}
 }
 

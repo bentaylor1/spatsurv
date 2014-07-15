@@ -5,14 +5,24 @@
 \method{vcov}{mcmcspatsurv}(object, ...)
 }
 \arguments{
-  \item{object}{X}
+  \item{object}{an object inheriting class mcmcspatsurv}
 
-  \item{...}{X}
+  \item{...}{other arguments, not used here}
 }
 \value{
-...
+the variance covariance matrix of the parameters beta,
+omega and eta
 }
 \description{
-A function to
+A function to return the variance covariance matrix of the
+parameters beta, omega and eta
+}
+\seealso{
+\link{print.mcmcspatsurv}, \link{quantile.mcmcspatsurv},
+\link{summary.mcmcspatsurv}, \link{frailtylag1},
+\link{spatialpars}, \link{hazardpars}, \link{fixedpars},
+\link{randompars}, \link{baselinehazard},
+\link{predict.mcmcspatsurv}, \link{priorposterior},
+\link{posteriorcov}, \link{MCE}, \link{hazardexceedance}
 }
 

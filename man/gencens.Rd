@@ -16,13 +16,15 @@ gencens(survtimes, censtimes, type = "right")
   'right' (default), 'left' or 'interval'}
 }
 \value{
-a named list containing 'obstimes', the observed time of
-the event; and 'censored', the censoring indicator which is
-equal to 1 if the event is observed and 0 otherwise.
+an object of class 'Surv', the censoring indicator is equal
+to 1 if the event is uncensored and 0 otherwise for
+right/left censored data, or for interval censored data,
+the indicator is 0 uncensored, 1 right censored, 2 left
+censored, or 3 interval censored.
 }
 \description{
 A function to generate observed times given a vector of
 true survival times and a vector of censoring times. Used
-in the simulation of survival data
+in the simulation of survival data.
 }
 

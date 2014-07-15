@@ -8,10 +8,18 @@ spatialpars(x)
   \item{x}{an object of class mcmcspatsurv}
 }
 \value{
-the mcmc chains
+the eta mcmc chains
 }
 \description{
 A function to return the mcmc chains for the spatial
 covariance function parameters
+}
+\seealso{
+\link{print.mcmcspatsurv}, \link{quantile.mcmcspatsurv},
+\link{summary.mcmcspatsurv}, \link{vcov.mcmcspatsurv},
+\link{frailtylag1}, \link{hazardpars}, \link{fixedpars},
+\link{randompars}, \link{baselinehazard},
+\link{predict.mcmcspatsurv}, \link{priorposterior},
+\link{posteriorcov}, \link{MCE}, \link{hazardexceedance}
 }
 

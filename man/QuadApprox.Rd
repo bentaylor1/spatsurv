@@ -2,7 +2,7 @@
 \alias{QuadApprox}
 \title{QuadApprox function}
 \usage{
-QuadApprox(fun, npts, argRanges, plot = TRUE, ...)
+QuadApprox(fun, npts, argRanges, plot = FALSE, ...)
 }
 \arguments{
   \item{fun}{a function}

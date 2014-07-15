@@ -22,6 +22,8 @@ getcov(u, sigma, phi, model, pars)
 this is just a wrapper for CovarianceFct
 }
 \description{
-getcov function
+A function to return the covariance from a model based on
+the randomFields covariance functions. Not intended for
+general use.
 }
 

@@ -18,9 +18,16 @@ indepGaussianprior(beta = NULL, omega = NULL, eta = NULL, priors)
   ?mcmcPriors}
 }
 \value{
-the log prior
+the log of the prior evaluated at the given parameter
+values
 }
 \description{
-A function to evaluate the prior for independent normals
+A function for evaluating the log of an independent
+Gaussian prior for a given set of parameter values.
+}
+\seealso{
+\link{survspat}, \link{betapriorGauss},
+\link{omegapriorGauss}, \link{etapriorGauss},
+\link{indepGaussianprior}, \link{derivindepGaussianprior}
 }
 
