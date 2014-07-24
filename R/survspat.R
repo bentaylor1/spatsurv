@@ -40,7 +40,11 @@ survspat <- function(   formula,
     }                     
 
     # okay, start the MCMC!
-    start <- Sys.time()
+
+    # start timing, maybe
+    if(!control$timeonlyMCMC){
+        start <- Sys.time()
+    }
 
     coords <- coordinates(data)
 
@@ -70,7 +74,7 @@ survspat <- function(   formula,
         dyidx <- pmin(abs(yidx-yidx[1]),Next-abs(yidx-yidx[1]))
         u <- sqrt(((x[2]-x[1])*dxidx)^2+((y[2]-y[1])*dyidx)^2)
         
-        spix <- grid2spix(xgrid=mcens,ygrid=mcens)
+        spix <- grid2spix(xgrid=mcens,ygrid=ncens,proj4string=CRS(proj4string(data)))
         
         control$fftgrid <- gridobj
         control$idx <- over(data,geometry(spix))
@@ -237,6 +241,11 @@ survspat <- function(   formula,
     
     gammamean <- 0
     count <- 1
+
+    # start timing, maybe
+    if(control$timeonlyMCMC){
+        start <- Sys.time()
+    }
     
     
     while(nextStep(mcmcloop)){
