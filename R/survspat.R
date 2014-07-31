@@ -374,7 +374,7 @@ survspat <- function(   formula,
     
     ####    
     
-    colnames(betasamp) <- attr(Terms,"term.labels")
+    colnames(betasamp) <- colnames(model.matrix(formula,data))[-1] #attr(Terms,"term.labels")
     retlist$betasamp <- betasamp
     retlist$omegasamp <- omegasamp
     retlist$etasamp <- etasamp
@@ -394,6 +394,9 @@ survspat <- function(   formula,
         retlist$N <- Next/control$ext
         retlist$xvals <- mcens[1:retlist$M]
         retlist$yvals <- ncens[1:retlist$N]
+        lookup <- as.vector(matrix(1:(Mext*Next),Mext,Next)[1:retlist$M,1:retlist$N])
+        ref <- as.vector(matrix(1:(retlist$M*retlist$N),retlist$M,retlist$N))
+        retlist$cellidx <- sapply(control$idx,function(i){ref[lookup==i]})
     }
     
     retlist$tarrec <- tarrec

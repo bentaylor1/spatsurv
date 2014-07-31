@@ -458,16 +458,7 @@ predict.mcmcspatsurv <- function(object,type="density",t=NULL,n=110,indx=NULL,pr
     if(type=="Et"){
         n <- nobs
         pb <- txtProgressBar(min = 0, max = nobs)
-    }
-    
-    if(object$gridded){
-        Mext <- object$control$ext*object$M
-        Next <- object$control$ext*object$N
-        lookup <- as.vector(matrix(1:(Mext*Next),Mext,Next)[1:object$M,1:object$N])
-        ref <- as.vector(matrix(1:(object$M*object$N),object$M,object$N))
-        idx <- sapply(object$control$idx,function(i){ref[lookup==i]})
-    }
-    
+    }    
     
     nits <- nrow(object$Ysamp)
     
@@ -482,7 +473,7 @@ predict.mcmcspatsurv <- function(object,type="density",t=NULL,n=110,indx=NULL,pr
         inputs$dist <- object$dist
         for (j in 1:nits){
             if(object$gridded){
-                inputs$Y <- object$Ysamp[j,idx[i]]
+                inputs$Y <- object$Ysamp[j,object$cellidx[i]]
             }
             else{
                 inputs$Y <- object$Ysamp[j,i]    

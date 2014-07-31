@@ -4,6 +4,7 @@
 ##'
 ##' @param cov.model a covariance model 
 ##' @return the length of eta
+##' @export
 
 getleneta <- function(cov.model){
     if(inherits(cov.model,"fromRandomFieldsCovarianceFct")){
