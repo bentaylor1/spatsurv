@@ -160,11 +160,12 @@ gencens <- function(survtimes,censtimes,type="right"){
 ##' @param ylim optional y-limits of plot, default is to choose this automatically
 ##' @param xlab label for x-axis
 ##' @param ylab label for y-axis
+##' @param add logical, whether to add the survival plot on top of an existing plot, default is FALSE, which produces a plot in a new device
 ##' @param ... other arguments to pass to plot
 ##' @return Plots the survival data non-censored observations appear as dots and censored observations as crosses. The size of the dot is proportional to the observed time.
 ##' @export
 
-plotsurv <- function(spp,ss,maxcex=1,transform=identity,background=NULL,eventpt=19,eventcol="red",censpt="+",censcol="black",xlim=NULL,ylim=NULL,xlab=NULL,ylab=NULL,...){
+plotsurv <- function(spp,ss,maxcex=1,transform=identity,background=NULL,eventpt=19,eventcol="red",censpt="+",censcol="black",xlim=NULL,ylim=NULL,xlab=NULL,ylab=NULL,add=FALSE,...){
     crds <- coordinates(spp)
     if(is.null(xlim)){
         if(is.null(background)){
@@ -190,7 +191,9 @@ plotsurv <- function(spp,ss,maxcex=1,transform=identity,background=NULL,eventpt=
     event <- ss[,"status"] == 1 # event indicator
     cexx <- maxcex* stimes / max(stimes)    
     
-    plot(background,xlim=xlim,ylim=ylim,xlab=xlab,ylab=ylab,...)
+    if(!add){
+        plot(background,xlim=xlim,ylim=ylim,xlab=xlab,ylab=ylab,...)
+    }
     points(crds[event,],pch=eventpt,col=eventcol,cex=cexx[event])
     points(crds[!event,],pch=censpt,col=censcol,cex=cexx[!event])
     
@@ -205,7 +208,8 @@ plotsurv <- function(spp,ss,maxcex=1,transform=identity,background=NULL,eventpt=
 ##' @param gridded logical. Whether to perform compuation on a grid. Default is FALSE.
 ##' @param cellwidth the width of computational cells to use 
 ##' @param ext integer the number of times to extend the computational grid by in order to perform compuitation. The default is 2.
-##' @param MLinits optional initial values for the non-spatial maximum likelihood routine used to initialise the MCMC, a vector of length 
+##' @param optimcontrol a list of optional arguments to be passed to optim for non-spatial models
+##' @param hessian whether to return a numerical hessian. Set this to TRUE for non-spatial models.
 ##' equal to the number of parameters of the baseline hazard
 ##' @param plotcal logical, whether to produce plots of the MCMC calibration process, this is a technical option and should onyl be set 
 ##' to TRUE if poor mixing is evident (the printed h is low), then it is also useful to use a graphics device with multiple plotting windows. 
@@ -214,12 +218,13 @@ plotsurv <- function(spp,ss,maxcex=1,transform=identity,background=NULL,eventpt=
 ##' @seealso \link{survspat}
 ##' @export
 
-inference.control <- function(gridded=FALSE,cellwidth=NULL,ext=2,MLinits=NULL,plotcal=FALSE,timeonlyMCMC=FALSE){
+inference.control <- function(gridded=FALSE,cellwidth=NULL,ext=2,optimcontrol=NULL,hessian=FALSE,plotcal=FALSE,timeonlyMCMC=FALSE){
     ans <- list()
     ans$gridded <- gridded
     ans$cellwidth <- cellwidth 
     ans$ext <- ext 
-    ans$MLinits <- MLinits
+    ans$optimcontrol <- optimcontrol
+    ans$hessian <- hessian
     ans$plotcal <- plotcal
     ans$timeonlyMCMC <- timeonlyMCMC
     class(ans) <- c("inference.control","list")

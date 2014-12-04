@@ -5,7 +5,8 @@
 \usage{
 plotsurv(spp, ss, maxcex = 1, transform = identity, background = NULL,
   eventpt = 19, eventcol = "red", censpt = "+", censcol = "black",
-  xlim = NULL, ylim = NULL, xlab = NULL, ylab = NULL, ...)
+  xlim = NULL, ylim = NULL, xlab = NULL, ylab = NULL, add = FALSE,
+  ...)
 }
 \arguments{
 \item{spp}{A spatial points data frame}
@@ -33,6 +34,8 @@ plotsurv(spp, ss, maxcex = 1, transform = identity, background = NULL,
 \item{xlab}{label for x-axis}
 
 \item{ylab}{label for y-axis}
+
+\item{add}{logical, whether to add the survival plot on top of an existing plot, default is FALSE, which produces a plot in a new device}
 
 \item{...}{other arguments to pass to plot}
 }
