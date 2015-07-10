@@ -86,8 +86,22 @@ maxlikparamPHsurv <- function(surv,X,control){
 ##' @export
 
 NonSpatialLogLikelihood_or_gradient <- function(surv,X,beta,omega,control,loglikelihood,gradient){
+
+    censoringtype <- control$censoringtype
+    censored <- control$censored
+    notcensored <- control$notcensored
+    Ctest <- control$Ctest
+    Utest <- control$Utest
+    rightcensored <- control$rightcensored
+    notcensored <- control$notcensored
+    leftcensored <- control$leftcensored
+    intervalcensored <- control$intervalcensored
+    Rtest <- control$Rtest
+    Utest <- control$Utest
+    Ltest <- control$Ltest
+    Itest <- control$Itest
     
-    censoringtype <- attr(surv,"type")
+    # censoringtype <- attr(surv,"type")
     
     omegaorig <- omega # recall we are working with omega on the transformed scale
     omega <- control$omegaitrans(omega) # this is omega on the correct scale
@@ -99,25 +113,25 @@ NonSpatialLogLikelihood_or_gradient <- function(surv,X,beta,omega,control,loglik
     Xbeta <- X%*%beta
     expXbeta <- exp(Xbeta)
     
-    if(censoringtype=="left" | censoringtype=="right"){
-        censored <- surv[,"status"]==0
-        notcensored <- !censored
+    # if(censoringtype=="left" | censoringtype=="right"){
+    #     censored <- surv[,"status"]==0
+    #     notcensored <- !censored
 
-        Ctest <- any(censored)
-        Utest <- any(notcensored)        
+    #     Ctest <- any(censored)
+    #     Utest <- any(notcensored)        
         
-    }
-    else{
-        rightcensored <- surv[,"status"] == 0
-        notcensored <- surv[,"status"] == 1
-        leftcensored <- surv[,"status"] == 2
-        intervalcensored <- surv[,"status"] == 3
+    # }
+    # else{
+    #     rightcensored <- surv[,"status"] == 0
+    #     notcensored <- surv[,"status"] == 1
+    #     leftcensored <- surv[,"status"] == 2
+    #     intervalcensored <- surv[,"status"] == 3
 
-        Rtest <- any(rightcensored)        
-        Utest <- any(notcensored) 
-        Ltest <- any(leftcensored)
-        Itest <- any(intervalcensored)
-    }
+    #     Rtest <- any(rightcensored)        
+    #     Utest <- any(notcensored) 
+    #     Ltest <- any(leftcensored)
+    #     Itest <- any(intervalcensored)
+    # }
 
     
 

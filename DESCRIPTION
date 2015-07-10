@@ -21,7 +21,9 @@ Imports:
     stringr,
     rgeos,
     RColorBrewer,
-    geostatsp
+    geostatsp,
+    OpenStreetMap,
+    methods
 Suggests:
     rgdal,
     gpclib
