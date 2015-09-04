@@ -116,7 +116,7 @@ spplot1 <- function(x,
 				ns <- spTransform(x,CRS('+init=epsg:4326'))
 				m <- leaflet() %>%
 				addTiles(urlTemplate=urltemplate) %>%
-				addCircles(data=ns,color=cols,stroke=FALSE) %>%
+				addCircleMarkers(data=ns,color=cols,stroke=FALSE) %>%
 				addLegend(position='topright', labels = lvls, colors = palette,opacity=legendOpacity)
 			}
 			else{
@@ -138,7 +138,7 @@ spplot1 <- function(x,
 					ns <- spTransform(x,CRS('+init=epsg:4326'))
 					m <- leaflet() %>%
 					addTiles(urlTemplate=urltemplate) %>%
-					addCircles(data=ns,color=cols,stroke=FALSE) 
+					addCircleMarkers(data=ns,color=cols,stroke=FALSE) 
 				}
 				else{
 					stop('Leaflet mapping for this kind of object not supported at present')
