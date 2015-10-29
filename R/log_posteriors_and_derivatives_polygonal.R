@@ -95,27 +95,44 @@ logPosterior_polygonal <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,
      
     if(censoringtype=="right"){
         h <- haz$h(surv[,"time"])
-        
-        loglik <-  (if(Utest){sum(XbetaplusY[notcensored] + log(h)[notcensored] - J[notcensored])}else{0}) + 
-                    (if(Ctest){sum(-J[censored])}else{0})
 
-        logpost <- loglik + priorcontrib                    
+        Uterm <- c()
+        Cterm <- c()
+          
+        loglik <-  (if(Utest){Uterm <- XbetaplusY[notcensored] + log(h)[notcensored] - J[notcensored];sum(Uterm)}else{0}) + 
+                    (if(Ctest){Cterm <- -J[censored];sum(Cterm)}else{0})
+
+        logpost <- loglik + priorcontrib  
+
+        indiv_loglik <- c(Uterm,Cterm)                  
     }
     else if(censoringtype=="left"){
         h <- haz$h(surv[,"time"])
+
+        Uterm <- c()
+        Cterm <- c()
         
-        loglik <-  (if(Utest){sum(XbetaplusY[notcensored] + log(h)[notcensored] - J[notcensored])}else{0}) + 
-                    (if(Ctest){sum(log(1-S[censored]))}else{0})
+        loglik <-  (if(Utest){Uterm <- XbetaplusY[notcensored] + log(h)[notcensored] - J[notcensored];sum(Uterm)}else{0}) + 
+                    (if(Ctest){Cterm <- log(1-S[censored]);sum(Cterm)}else{0})
+
+        indiv_loglik <- c(Uterm,Cterm)
         
         logpost <- loglik + priorcontrib
     }
     else{ #censoringtype=="interval"
         h <- haz$h(surv[,"time1"])
+
+        Uterm <- c()
+        Rterm <- c()
+        Lterm <- c()
+        Iterm <- c()
         
-        loglik <-  (if(Utest){sum(XbetaplusY[notcensored] + log(h)[notcensored] - J1[notcensored])}else{0}) + 
-                    (if(Rtest){sum(-J1[rightcensored])}else{0}) + 
-                    (if(Ltest){sum(log(1-S1[leftcensored]))}else{0}) + 
-                    (if(Itest){sum(log(S1[intervalcensored]-S2[intervalcensored]))}else{0})
+        loglik <-  (if(Utest){Uterm <- XbetaplusY[notcensored] + log(h)[notcensored] - J1[notcensored];sum(Uterm)}else{0}) + 
+                    (if(Rtest){Rterm <- -J1[rightcensored];sum(Rterm)}else{0}) + 
+                    (if(Ltest){Lterm <- log(1-S1[leftcensored]);sum(Lterm)}else{0}) + 
+                    (if(Itest){Iterm <- log(S1[intervalcensored]-S2[intervalcensored]);sum(Iterm)}else{0})
+
+        indiv_loglik <- c(Uterm,Rterm,Lterm,Iterm)
         
         logpost <- loglik + priorcontrib
     }
@@ -406,6 +423,7 @@ logPosterior_polygonal <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,
         retlist <- list()
         retlist$logpost <- logpost
         retlist$loglik <- loglik
+        retlist$indiv_loglik <- indiv_loglik
         retlist$Y <- Y
         if(gradient){
             retlist$grad <- grad

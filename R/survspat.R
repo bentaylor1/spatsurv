@@ -76,9 +76,12 @@ survspat <- function(   formula,
     checkSurvivalData(survivaldata) 
 
     if(latentmode=="SPDE"){
-        if(proj4string(data)!=proj4string(shape)){
-            stop("'shape' and 'data' must have the same proj4string.")
-        } 
+        if(!is.na(proj4string(data)) & !is.na(proj4string(shape))){
+            if(proj4string(data)!=proj4string(shape)){
+                stop("'shape' and 'data' must have the same proj4string.")
+            }
+        }
+
         if(is.null(control$cellwidth)){
             stop("Must specify 'cellwidth' in inference.control in SPDE mode.")
         }   
@@ -430,6 +433,9 @@ survspat <- function(   formula,
 
     bad <-  c()
     
+    #gammasave <- c()
+
+    indiv_loglik <- c()
     
     while(nextStep(mcmcloop)){
 
@@ -507,6 +513,8 @@ survspat <- function(   formula,
             tarrec <- c(tarrec,oldlogpost$logpost)
             loglik <- c(loglik,oldlogpost$loglik)
             gammamean <- ((count-1)/count)*gammamean + (1/count)*gamma
+            #gammasave <- rbind(gammasave,gamma)
+            indiv_loglik <- rbind(indiv_loglik,oldlogpost$indiv_loglik)
             count <- count + 1
         }
     }
@@ -572,6 +580,10 @@ survspat <- function(   formula,
     retlist$Dhat <- Dhat
     retlist$pD <- pD
     retlist$DIC <- DIC
+
+    retlist$lpd_hat <- sum(log(colMeans(exp(indiv_loglik))))
+    retlist$phat_waic <- sum(apply(indiv_loglik,2,var))
+    retlist$WAIC = -2 * (retlist$lpd_hat - retlist$phat_waic)
     
     retlist$X <- X
     retlist$survivaldata <- survivaldata

@@ -34,6 +34,9 @@ print.mcmcspatsurv <- function(x,probs=c(0.5,0.025,0.975),digits = 3, scientific
     
     cat("Deviance Information Criterion: ",x$DIC,"\n")
     cat("\n")
+
+    cat("Watanabe-Akaike Information Criterion: ",x$WAIC,"\n")
+    cat("\n")
     
     cat("MCMC Details:\n")
     m <- matrix(c(x$mcmc.control$nits,x$mcmc.control$burn,x$mcmc.control$thin),3,1)
