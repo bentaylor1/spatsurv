@@ -6,7 +6,8 @@
 \usage{
 inference.control(gridded = FALSE, cellwidth = NULL, ext = 2,
   optimcontrol = NULL, hessian = FALSE, plotcal = FALSE,
-  timeonlyMCMC = FALSE)
+  timeonlyMCMC = FALSE, nugget = FALSE, savenugget = FALSE, split = 0.5,
+  logUsigma_priormean = 0, logUsigma_priorsd = 0.5)
 }
 \arguments{
 \item{gridded}{logical. Whether to perform compuation on a grid. Default is FALSE.}
@@ -24,6 +25,16 @@ equal to the number of parameters of the baseline hazard}
 to TRUE if poor mixing is evident (the printed h is low), then it is also useful to use a graphics device with multiple plotting windows.}
 
 \item{timeonlyMCMC}{logical, whether to only time the MCMC part of the algorithm, or whether to include in the reported running time the time taken to calibrate the method (default)}
+
+\item{nugget}{whether to include a nugget effect in the estimation. Note that only the mean and variance of the nugget effect is returned.}
+
+\item{savenugget}{whether to save the MCMC chain for the nugget effect}
+
+\item{split}{how to split the spatial and nugget proposal variance as a the proportion of variance assigned to the spatial effect apriori. Default is 0.5}
+
+\item{logUsigma_priormean}{prior mean for log standard deviation of nugget effect}
+
+\item{logUsigma_priorsd}{prior sd for log standard deviation of nugget effect}
 }
 \value{
 returns parameters to be used in the function survspat

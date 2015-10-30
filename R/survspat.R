@@ -300,6 +300,10 @@ survspat <- function(   formula,
 
     #######
 
+    if(control$nugget){
+        control$U <- 0
+    }
+
     
     cat("\n","Getting initial estimates of model parameters using maximum likelihood on non-spatial version of the model","\n")
     mlmod <- maxlikparamPHsurv(surv=survivaldata,X=X,control=control)
@@ -326,7 +330,14 @@ survspat <- function(   formula,
                         surv=survivaldata,
                         control=control)
                         
-    calibrate <- get(paste("proposalVariance",funtxt,sep=""))    
+    calibrate <- get(paste("proposalVariance",funtxt,sep=""))   
+
+    if(control$nugget){ # dummy for calibration purposes
+        control$U <- rep(0,nrow(X))
+        control$Ugamma <- rep(0,nrow(X))
+        control$Usigma <- 0
+        control$logUsigma <- 0
+    } 
        
     other <- calibrate( X=X,
                         surv=survivaldata,
@@ -337,6 +348,8 @@ survspat <- function(   formula,
                         cov.model=cov.model,
                         u=u,
                         control=control) 
+
+
     
     #gammahat <- other$gammahat
     etahat <- other$etahat                                                                        
@@ -385,12 +398,40 @@ survspat <- function(   formula,
     SIGMAgammaINV <- 1/SIGMAgamma
     cholSIGMAgamma <- sqrt(SIGMAgamma)
     
-     
+    if(control$nugget){
+
+        control$U <- rep(0,nrow(X)) # U this will be updated using a random walk, not worrying about approximately optimal scaling
+        Ugamma <- control$U # since U=0
+        control$Ugamma <- Ugamma 
+
+        SIGMAgamma <- control$split * SIGMA[diagidx][(lenbeta+lenomega+leneta+1):npars]
+        SIGMAgammaINV <- 1/SIGMAgamma
+        cholSIGMAgamma <- sqrt(SIGMAgamma)
+
+        SIGMA_Ugamma <- mean((1-control$split) * SIGMA[diagidx][(lenbeta+lenomega+leneta+1):npars]) # proposal variance for Ugamma
+        SIGMA_UgammaINV <- 1/SIGMA_Ugamma
+        cholSIGMA_Ugamma <- sqrt(SIGMA_Ugamma)
+
+        etatemp <- cov.model$itrans(eta)
+        Usigma <- (1-control$split) * etatemp[control$sigmaidx] # initialise Usigma where U = Usigma * Ugamma
+        logUsigma <- log(Usigma)
+        etatemp[control$sigmaidx] <- control$split * etatemp[control$sigmaidx]
+        eta <- cov.model$trans(etatemp)
+
+        SIGMA_logUsigma <- (1-control$split) * SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)][control$sigmaidx,control$sigmaidx]
+        SIGMA_logUsigmaINV <- 1/SIGMA_logUsigma
+        cholSIGMA_logUsigma <- sqrt(SIGMA_logUsigma)
+        SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)] <- control$split * SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)]
+
+        
+        control$Usigma <- Usigma
+        control$logUsigma <- logUsigma
+
+    } 
     
     cat("Running MCMC ...\n")
     
     h <- 1
-    
     
     
     LOGPOST <- get(paste("logPosterior",funtxt,sep=""))
@@ -406,8 +447,11 @@ survspat <- function(   formula,
                             u=u,
                             control=control,
                             gradient=TRUE)
-                            
-                          
+    
+    if(control$nugget){                        
+        oldUprior <- sum(dnorm(control$Ugamma,log=TRUE))
+        oldUsigmaprior <- dnorm(control$logUsigma,control$logUsigma_priormean,control$logUsigma_priorsd,log=TRUE)                      
+    }
                                                         
     
     betasamp <- c()
@@ -417,7 +461,13 @@ survspat <- function(   formula,
     
     gamma <- c(gamma) # turn gamma into a vector 
     
-    tarrec <- oldlogpost$logpost
+    if(control$nugget){
+        tarrec <- oldlogpost$logpost + sum(dnorm(control$Ugamma,log=TRUE)) + dnorm(control$logUsigma,control$logUsigma_priormean,control$logUsigma_priorsd,log=TRUE)
+    }
+    else{
+        tarrec <- oldlogpost$logpost 
+    }
+    
     
     print(SIGMA[1:8,1:8])
     
@@ -436,6 +486,13 @@ survspat <- function(   formula,
     #gammasave <- c()
 
     indiv_loglik <- c()
+    Umean <- 0
+    Uvar <- 0
+    Usigma_mean <- 0
+    Usigma_var <- 0
+
+    U_save <- c()
+    Usigma_save <- c()
     
     while(nextStep(mcmcloop)){
 
@@ -449,6 +506,25 @@ survspat <- function(   formula,
         ngam <- newstuffgamma
         if(control$gridded){
             ngam <- matrix(ngam,control$Mext,control$Next)
+        }
+
+        if(control$nugget){
+            oldU <- control$U
+            oldUgamma <- control$Ugamma
+            oldUsigma <- control$Usigma
+            oldlogUsigma <- control$logUsigma
+
+            propmeanUgamma <- control$Ugamma + (h/2)*SIGMA_Ugamma*oldlogpost$dP_dUgamma
+            newUgamma <- propmeanUgamma + sqrt(h)*cholSIGMA_Ugamma*rnorm(nrow(X))
+            
+            propmeanlogUsigma <- control$logUsigma + (h/2)*SIGMA_logUsigma*oldlogpost$dP_dlogUsigma
+            newlogUsigma <- propmeanlogUsigma + sqrt(h)*cholSIGMA_logUsigma*rnorm(1)
+            
+            control$U <- exp(newlogUsigma) * newUgamma
+            control$Ugamma <- newUgamma
+            control$Usigma <- exp(newlogUsigma)
+            control$logUsigma <- newlogUsigma
+
         }
                                        
         newlogpost <- LOGPOST(  surv=survivaldata,
@@ -464,7 +540,12 @@ survspat <- function(   formula,
                                 gradient=TRUE)
 
         revmeanpars <- newstuffpars + (h/2)*SIGMApars%*%newlogpost$grad[1:(lenbeta+lenomega+leneta)]
-        revmeangamma <- newstuffgamma + (h/2)*SIGMAgamma*newlogpost$grad[(lenbeta+lenomega+leneta+1):npars]       
+        revmeangamma <- newstuffgamma + (h/2)*SIGMAgamma*newlogpost$grad[(lenbeta+lenomega+leneta+1):npars]
+
+        if(control$nugget){
+            revmeanUgamma <- newUgamma + (h/2)*SIGMA_Ugamma*newlogpost$dP_dUgamma
+            revmeanlogUsigma <- newlogUsigma + (h/2)*SIGMA_logUsigma*newlogpost$dP_dlogUsigma       
+        }
 
         revdiffpars <- as.matrix(stuffpars-revmeanpars)
         forwdiffpars <- as.matrix(newstuffpars-propmeanpars)
@@ -477,6 +558,24 @@ survspat <- function(   formula,
                             (0.5/h)*t(forwdiffpars)%*%SIGMAparsINV%*%forwdiffpars -
                             (0.5/h)*sum(revdiffgamma*SIGMAgammaINV*revdiffgamma) + 
                             (0.5/h)*sum(forwdiffgamma*SIGMAgammaINV*forwdiffgamma)
+
+        if(control$nugget){
+
+            revdifflogUsigma <- as.matrix(oldlogUsigma-revmeanlogUsigma)
+            forwdifflogUsigma <- as.matrix(control$logUsigma-propmeanlogUsigma)
+            revdiffUgamma <- as.matrix(oldUgamma-revmeanUgamma)
+            forwdiffUgamma <- as.matrix(control$Ugamma-propmeanUgamma)
+
+            propUprior <- sum(dnorm(control$Ugamma,log=TRUE))
+            propUsigmaprior <- dnorm(control$logUsigma,control$logUsigma_priormean,control$logUsigma_priorsd,log=TRUE)
+
+            logfrac <- logfrac + propUprior - oldUprior +
+                                propUsigmaprior - oldUsigmaprior - 
+                                (0.5/h)*t(revdifflogUsigma)%*%SIGMA_logUsigmaINV%*%revdifflogUsigma + 
+                                (0.5/h)*t(forwdifflogUsigma)%*%SIGMA_logUsigmaINV%*%forwdifflogUsigma -
+                                (0.5/h)*sum(revdiffUgamma*SIGMA_UgammaINV*revdiffUgamma) + 
+                                (0.5/h)*sum(forwdiffUgamma*SIGMA_UgammaINV*forwdiffUgamma)
+        }                            
         
         ac <- min(1,exp(as.numeric(logfrac)))
         if(is.na(ac) | is.nan(ac)){
@@ -491,7 +590,20 @@ survspat <- function(   formula,
             eta <- newstuffpars[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)]
             gamma <- newstuffgamma
 
+            if(control$nugget){
+                oldUprior <- propUprior
+                oldUsigmaprior <- propUsigmaprior
+            }
+
             oldlogpost <- newlogpost
+        }
+        else{
+            if(control$nugget){ # revert back to old
+                control$U <- oldU
+                control$Ugamma <- oldUgamma
+                control$Usigma <- oldUsigma
+                control$logUsigma <- oldlogUsigma
+            }
         }
         
         h <- exp(log(h) + (1/(iteration(mcmcloop)^0.5))*(ac-0.574))
@@ -510,9 +622,29 @@ survspat <- function(   formula,
             else{
                 Ysamp <- rbind(Ysamp,as.vector(oldlogpost$Y))
             }
-            tarrec <- c(tarrec,oldlogpost$logpost)
+
+            if(control$nugget){
+                tarrec <- c(tarrec,oldlogpost$logpost + oldUprior + oldUsigmaprior)
+            }
+            else{
+                tarrec <- c(tarrec,oldlogpost$logpost)
+            }
             loglik <- c(loglik,oldlogpost$loglik)
             gammamean <- ((count-1)/count)*gammamean + (1/count)*gamma
+            if(control$nugget){
+                Umean <- ((count-1)/count)*Umean + (1/count)*control$U
+                Usigma_mean <- ((count-1)/count)*Usigma_mean + (1/count)*control$Usigma
+                if(count>1){
+                    Uvar <- ((count-2)/(count-1))*Uvar + (count/(count-1)^2)*(control$U-Umean)^2
+                    Usigma_var <- ((count-2)/(count-1))*Usigma_var + (count/(count-1)^2)*(control$Usigma-Usigma_mean)^2
+                }
+
+                if(control$savenugget){
+                    U_save <- rbind(U_save,control$U)
+                    Usigma_save <- rbind(Usigma_save,control$Usigma)
+                }
+
+            }
             #gammasave <- rbind(gammasave,gamma)
             indiv_loglik <- rbind(indiv_loglik,oldlogpost$indiv_loglik)
             count <- count + 1
@@ -520,6 +652,14 @@ survspat <- function(   formula,
     }
     
     colnames(Ysamp) <- paste("Y",1:ncol(Ysamp),sep="")
+
+    if(control$nugget){
+        control$U <- Umean
+        control$Ugamma <- Umean / Usigma_mean 
+        control$Usigma <- Usigma_mean
+        control$logUsigma <- log(Usigma_mean)
+        warning("For models with a nugget effect, the DIC is approximate. Use WAIC instead.")
+    }
     
     # Compute DIC
     Dhat <- -2*LOGPOST(  surv=survivaldata,
@@ -618,6 +758,19 @@ survspat <- function(   formula,
     retlist$shape <- shape
     retlist$ids <- ids    
     retlist$latentmode <- latentmode
+
+    retlist$nugget <- control$nugget
+    if(control$nugget){
+        retlist$nugget_mean <- Umean 
+        retlist$nugget_var <- Uvar
+        retlist$Usigma_mean <- Usigma_mean 
+        retlist$Usigma_var <- Usigma_var
+
+        if(control$savenugget){
+            retlist$U <- U_save
+            retlist$Usigma <- Usigma_save
+        }
+    }
     
     retlist$time.taken <- Sys.time() - start
     

@@ -61,7 +61,12 @@ logPosterior_polygonal <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,
     Y <- MU + cholsigma%*%gamma
     
     Xbeta <- X%*%beta
-    XbetaplusY <- Xbeta + Y[control$idx]
+    if(control$nugget){
+        XbetaplusY <- Xbeta + Y[control$idx] + control$U
+    }
+    else{
+        XbetaplusY <- Xbeta + Y[control$idx]   
+    }
     expXbetaplusY <- exp(XbetaplusY)
 
     # setup function J=exp(X%*%beta + Y)*H_0(t)
@@ -174,6 +179,19 @@ logPosterior_polygonal <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,
             #                (if(Ctest){colSums(-dJ_dgamma[censored,,drop=FALSE])}else{0})
             
             grad <- deriv + c(dP_dbeta,dP_domega,rep(0,length(eta)),dP_dgamma)
+
+            if(control$nugget){
+                dP_dUgamma <- -control$Ugamma
+                if(Utest){
+                    dP_dUgamma[notcensored] <-dP_dUgamma[notcensored] + control$Usigma - control$Usigma*J[notcensored]
+                }
+                if(Ctest){
+                    dP_dUgamma[censored] <- dP_dUgamma[censored] - control$Usigma*J[censored] 
+                }
+                                                 
+                dP_dlogUsigma <- (-1/control$logUsigma_priorsd^2)*(control$logUsigma-control$logUsigma_priormean) + # derivative of prior 
+                                    control$Usigma*sum(control$Ugamma - control$Ugamma*J)  # Usigma is the Jacobian
+            }
             
         }
         else if(censoringtype=="left"){
@@ -194,6 +212,20 @@ logPosterior_polygonal <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,
             #                (if(Ctest){colSums((S[censored]/(1-S[censored]))*dJ_dgamma[censored,,drop=FALSE])}else{0})
             
             grad <- deriv + c(dP_dbeta,dP_domega,rep(0,length(eta)),dP_dgamma)
+
+            if(control$nugget){
+
+                dP_dUgamma <- -control$Ugamma
+                if(Utest){
+                    dP_dUgamma[notcensored] <-dP_dUgamma[notcensored] + control$Usigma - control$Usigma*J[notcensored]
+                }
+                if(Ctest){
+                    dP_dUgamma[censored] <- dP_dUgamma[censored] + (S[censored]/(1-S[censored]))*control$Usigma*J[censored] 
+                }
+
+                dP_dlogUsigma <- (-1/control$logUsigma_priorsd^2)*(control$logUsigma-control$logUsigma_priormean) +  # derivative of prior
+                                    control$Usigma*sum(control$Ugamma*J*S/(1-S))  # Usigma is the Jacobian
+            }
         }
         else{ #censoringtype=="interval" 
             dP_dbeta <- (if(Utest){colSums(X[notcensored,,drop=FALSE] - dJ_dbeta1[notcensored,,drop=FALSE])}else{0}) + 
@@ -223,6 +255,26 @@ logPosterior_polygonal <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,
             #                 (if(Itest){colSums((1/(S1[intervalcensored]-S2[intervalcensored]))*(dJ_dgamma2[intervalcensored,,drop=FALSE]*S2[intervalcensored]-dJ_dgamma1[intervalcensored,,drop=FALSE]*S1[intervalcensored]))}else{0})
             
             grad <- deriv + c(dP_dbeta,dP_domega,rep(0,length(eta)),dP_dgamma)
+
+            if(control$nugget){
+
+                dP_dUgamma <- -control$Ugamma
+                if(Utest){
+                    dP_dUgamma[notcensored] <-dP_dUgamma[notcensored] + control$Usigma - control$Usigma*J[notcensored]
+                }
+                if(Rtest){
+                    dP_dUgamma[rightcensored] <- dP_dUgamma[rightcensored] - control$Usigma*J[rightcensored] 
+                }
+                if(Ltest){
+                    dP_dUgamma[leftcensored] <- dP_dUgamma[leftcensored] + (S[leftcensored]/(1-S[leftcensored]))*control$Usigma*J[leftcensored] 
+                }
+                if(Itest){
+                    dP_dUgamma[intervalcensored] <- dP_dUgamma[intervalcensored] + (1/(S1[intervalcensored]-S2[intervalcensored]))*(control$Usigma*J2[intervalcensored]*S2[intervalcensored]-control$Usigma*J1[intervalcensored]*S1[intervalcensored])
+                }
+
+                dP_dlogUsigma <- (-1/control$logUsigma_priorsd^2)*(control$logUsigma-control$logUsigma_priormean) +  # derivative of prior
+                                    control$Usigma*sum((control$Ugamma*J2*S2-control$Ugamma*J1*S1)*1/(S1-S2)) # Usigma is the Jacobian 
+            }
         }
     
     }
@@ -427,6 +479,10 @@ logPosterior_polygonal <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,
         retlist$Y <- Y
         if(gradient){
             retlist$grad <- grad
+            if(control$nugget){
+                retlist$dP_dUgamma <- dP_dUgamma
+                retlist$dP_dlogUsigma <- dP_dlogUsigma
+            }
         }
         if(hessian){
             retlist$hess_beta <- hess_beta

@@ -31,6 +31,14 @@ print.mcmcspatsurv <- function(x,probs=c(0.5,0.025,0.975),digits = 3, scientific
     cat("Spatial Covariance Parameters:\n")   
     print(quant$etaquant,digits=digits,scientific=scientific)
     cat("\n")
+
+    if(x$control$nugget){
+        cat("Estimated standard deviation of nugget:\n")   
+        print(x$Usigma_mean,digits=digits,scientific=scientific)
+        cat("standard error:\n")   
+        print(sqrt(x$Usigma_var),digits=digits,scientific=scientific)
+        cat("\n")
+    }
     
     cat("Deviance Information Criterion: ",x$DIC,"\n")
     cat("\n")

@@ -214,11 +214,27 @@ plotsurv <- function(spp,ss,maxcex=1,transform=identity,background=NULL,eventpt=
 ##' @param plotcal logical, whether to produce plots of the MCMC calibration process, this is a technical option and should onyl be set 
 ##' to TRUE if poor mixing is evident (the printed h is low), then it is also useful to use a graphics device with multiple plotting windows. 
 ##' @param timeonlyMCMC logical, whether to only time the MCMC part of the algorithm, or whether to include in the reported running time the time taken to calibrate the method (default)
+##' @param nugget whether to include a nugget effect in the estimation. Note that only the mean and variance of the nugget effect is returned.
+##' @param savenugget whether to save the MCMC chain for the nugget effect
+##' @param split how to split the spatial and nugget proposal variance as a the proportion of variance assigned to the spatial effect apriori. Default is 0.5
+##' @param logUsigma_priormean prior mean for log standard deviation of nugget effect
+##' @param logUsigma_priorsd prior sd for log standard deviation of nugget effect
 ##' @return returns parameters to be used in the function survspat
 ##' @seealso \link{survspat}
 ##' @export
 
-inference.control <- function(gridded=FALSE,cellwidth=NULL,ext=2,optimcontrol=NULL,hessian=FALSE,plotcal=FALSE,timeonlyMCMC=FALSE){
+inference.control <- function(  gridded=FALSE,
+                                cellwidth=NULL,
+                                ext=2,
+                                optimcontrol=NULL,
+                                hessian=FALSE,
+                                plotcal=FALSE,
+                                timeonlyMCMC=FALSE,
+                                nugget=FALSE,
+                                savenugget=FALSE,
+                                split=0.5,
+                                logUsigma_priormean=0,
+                                logUsigma_priorsd=0.5){
     ans <- list()
     ans$gridded <- gridded
     ans$cellwidth <- cellwidth 
@@ -227,6 +243,11 @@ inference.control <- function(gridded=FALSE,cellwidth=NULL,ext=2,optimcontrol=NU
     ans$hessian <- hessian
     ans$plotcal <- plotcal
     ans$timeonlyMCMC <- timeonlyMCMC
+    ans$nugget <- nugget
+    ans$savenugget <- savenugget
+    ans$split <- split
+    ans$logUsigma_priormean <- logUsigma_priormean
+    ans$logUsigma_priorsd <- logUsigma_priorsd
     class(ans) <- c("inference.control","list")
     return(ans)
 }
