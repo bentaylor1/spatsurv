@@ -384,15 +384,14 @@ survspat <- function(   formula,
         matidx <- matrix(0,control$Mext,control$Next)
         matidx[1:(control$Mext/control$ext),1:(control$Next/control$ext)] <- 1
         matidx <- as.logical(matidx) # used to select which Y's to save 
-    }
-  
-    
+    } 
+
     diagidx <- 1:npars
     diagidx <- matrix(diagidx,nrow=npars,ncol=2)
-    SIGMApars <- as.matrix(SIGMA[1:(lenbeta+lenomega+leneta),1:(lenbeta+lenomega+leneta)])
-    
+
+    SIGMApars <- as.matrix(SIGMA[1:(lenbeta+lenomega+leneta),1:(lenbeta+lenomega+leneta)])    
     SIGMAparsINV <- solve(SIGMApars)
-    cholSIGMApars <- t(chol(SIGMApars))  
+    cholSIGMApars <- t(chol(SIGMApars)) 
   
     SIGMAgamma <- SIGMA[diagidx][(lenbeta+lenomega+leneta+1):npars]
     SIGMAgammaINV <- 1/SIGMAgamma
@@ -400,8 +399,7 @@ survspat <- function(   formula,
     
     if(control$nugget){
 
-        control$U <- rep(0,nrow(X)) # U this will be updated using a random walk, not worrying about approximately optimal scaling
-        Ugamma <- control$U # since U=0
+        Ugamma <- rep(0,nrow(X)) 
         control$Ugamma <- Ugamma 
 
         SIGMAgamma <- control$split * SIGMA[diagidx][(lenbeta+lenomega+leneta+1):npars]
@@ -421,14 +419,16 @@ survspat <- function(   formula,
         SIGMA_logUsigma <- (1-control$split) * SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)][control$sigmaidx,control$sigmaidx]
         SIGMA_logUsigmaINV <- 1/SIGMA_logUsigma
         cholSIGMA_logUsigma <- sqrt(SIGMA_logUsigma)
-        SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)] <- control$split * SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)]
 
-        
+        control$U <- -Usigma^2/2 # U this will be updated using a random walk, not worrying about approximately optimal scaling
         control$Usigma <- Usigma
         control$logUsigma <- logUsigma
 
-    } 
-    
+    }
+
+    #browser()
+
+
     cat("Running MCMC ...\n")
     
     h <- 1
@@ -462,7 +462,7 @@ survspat <- function(   formula,
     gamma <- c(gamma) # turn gamma into a vector 
     
     if(control$nugget){
-        tarrec <- oldlogpost$logpost + sum(dnorm(control$Ugamma,log=TRUE)) + dnorm(control$logUsigma,control$logUsigma_priormean,control$logUsigma_priorsd,log=TRUE)
+        tarrec <- oldlogpost$logpost + oldUprior + oldUsigmaprior
     }
     else{
         tarrec <- oldlogpost$logpost 
@@ -514,13 +514,13 @@ survspat <- function(   formula,
             oldUsigma <- control$Usigma
             oldlogUsigma <- control$logUsigma
 
-            propmeanUgamma <- control$Ugamma + (h/2)*SIGMA_Ugamma*oldlogpost$dP_dUgamma
+            propmeanUgamma <- oldUgamma + (h/2)*SIGMA_Ugamma*oldlogpost$dP_dUgamma
             newUgamma <- propmeanUgamma + sqrt(h)*cholSIGMA_Ugamma*rnorm(nrow(X))
             
-            propmeanlogUsigma <- control$logUsigma + (h/2)*SIGMA_logUsigma*oldlogpost$dP_dlogUsigma
+            propmeanlogUsigma <- oldlogUsigma + (h/2)*SIGMA_logUsigma*oldlogpost$dP_dlogUsigma
             newlogUsigma <- propmeanlogUsigma + sqrt(h)*cholSIGMA_logUsigma*rnorm(1)
             
-            control$U <- exp(newlogUsigma) * newUgamma
+            control$U <- -exp(newlogUsigma)^2/2 + exp(newlogUsigma) * newUgamma
             control$Ugamma <- newUgamma
             control$Usigma <- exp(newlogUsigma)
             control$logUsigma <- newlogUsigma
@@ -583,6 +583,8 @@ survspat <- function(   formula,
             bad <- c(bad,iteration(mcmcloop))
             warning("An acceptance probability could not be calculated for this iteration, this is likely because the spatial decay parameter was too big for this choice of 'ext'. Either increase ext, or tighten prior on spatial decay parameter. At the end of the run check $bad to see which iterations this affected. Stop the run if this problem persists.",immediate.=TRUE)
         }
+
+        #if(iteration(mcmcloop)==2000){browser()}
         
         if(ac>runif(1)){
             beta <- newstuffpars[1:lenbeta]

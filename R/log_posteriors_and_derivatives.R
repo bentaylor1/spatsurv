@@ -101,7 +101,7 @@ logPosterior <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,control,
     
      
     if(censoringtype=="right"){
-        h <- haz$h(surv[,"time"])
+        #h <- haz$h(surv[,"time"])
 
         Uterm <- c()
         Cterm <- c()
@@ -114,7 +114,7 @@ logPosterior <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,control,
         indiv_loglik <- c(Uterm,Cterm)                  
     }
     else if(censoringtype=="left"){
-        h <- haz$h(surv[,"time"])
+        #h <- haz$h(surv[,"time"])
 
         Uterm <- c()
         Cterm <- c()
@@ -183,7 +183,7 @@ logPosterior <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,control,
                 }
                                                  
                 dP_dlogUsigma <- (-1/control$logUsigma_priorsd^2)*(control$logUsigma-control$logUsigma_priormean) + # derivative of prior 
-                                    control$Usigma*sum(control$Ugamma - control$Ugamma*J)  # Usigma is the Jacobian
+                                    control$Usigma*sum(-control$Usigma + control$Ugamma - (-control$Usigma + control$Ugamma)*J)  # Usigma is the Jacobian
             }
             
         }
@@ -210,7 +210,7 @@ logPosterior <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,control,
                 }
 
                 dP_dlogUsigma <- (-1/control$logUsigma_priorsd^2)*(control$logUsigma-control$logUsigma_priormean) +  # derivative of prior
-                                    control$Usigma*sum(control$Ugamma*J*S/(1-S))  # Usigma is the Jacobian
+                                    control$Usigma*sum((-control$Usigma + control$Ugamma)*J*S/(1-S))  # Usigma is the Jacobian
             }
         }
         else{ #censoringtype=="interval" 
@@ -248,7 +248,7 @@ logPosterior <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,u,control,
                 }
 
                 dP_dlogUsigma <- (-1/control$logUsigma_priorsd^2)*(control$logUsigma-control$logUsigma_priormean) +  # derivative of prior
-                                    control$Usigma*sum((control$Ugamma*J2*S2-control$Ugamma*J1*S1)*1/(S1-S2)) # Usigma is the Jacobian 
+                                    control$Usigma*sum(((-control$Usigma + control$Ugamma)*J2*S2-(-control$Usigma + control$Ugamma)*J1*S1)*1/(S1-S2)) # Usigma is the Jacobian 
             }
         }
     

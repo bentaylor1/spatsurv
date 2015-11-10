@@ -3,7 +3,7 @@ Type: Package
 Title: Bayesian Spatial Survival Analysis with Parametric Proportional Hazards
     Models
 Version: 0.9-12
-Date: 2015-09-04
+Date: 2015-11-02
 Author: Benjamin M. Taylor and Barry S. Rowlingson
 Maintainer: Benjamin M. Taylor <b.taylor1@lancaster.ac.uk>
 Description: Bayesian inference for parametric proportional hazards spatial survival models; flexible spatial survival models.

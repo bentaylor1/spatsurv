@@ -99,7 +99,7 @@ logPosterior_polygonal <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,
     
      
     if(censoringtype=="right"){
-        h <- haz$h(surv[,"time"])
+        #h <- haz$h(surv[,"time"])
 
         Uterm <- c()
         Cterm <- c()
@@ -112,7 +112,7 @@ logPosterior_polygonal <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,
         indiv_loglik <- c(Uterm,Cterm)                  
     }
     else if(censoringtype=="left"){
-        h <- haz$h(surv[,"time"])
+        #h <- haz$h(surv[,"time"])
 
         Uterm <- c()
         Cterm <- c()
@@ -171,7 +171,7 @@ logPosterior_polygonal <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,
             dP_domega <- control$omegajacobian(omegaorig)*dP_domega # this puts the derivative back on the correct scale dL/dpsi = dL/dtheta * dtheta/dpsi, e.g. psi=log(theta)
 
             bitsnbobs <- rep(0,control$n)
-            browser()
+            #browser()
             bitsnbobs[control$uqidx] <- bitsnbobs[control$uqidx] + sapply(control$uqidx,function(i){control$sumidxinotcensored[[i]]-sum(J[control$idxi[[i]]])})            
             dP_dgamma <- cholsigma%*%bitsnbobs #as.vector(Re((1/(control$Mext*control$Next))*fft(invrootQeigs*fft(bitsnbobs,inverse=TRUE))))
 
@@ -190,7 +190,7 @@ logPosterior_polygonal <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,
                 }
                                                  
                 dP_dlogUsigma <- (-1/control$logUsigma_priorsd^2)*(control$logUsigma-control$logUsigma_priormean) + # derivative of prior 
-                                    control$Usigma*sum(control$Ugamma - control$Ugamma*J)  # Usigma is the Jacobian
+                                    control$Usigma*sum(-control$Usigma + control$Ugamma - (-control$Usigma + control$Ugamma)*J)  # Usigma is the Jacobian
             }
             
         }
@@ -224,7 +224,7 @@ logPosterior_polygonal <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,
                 }
 
                 dP_dlogUsigma <- (-1/control$logUsigma_priorsd^2)*(control$logUsigma-control$logUsigma_priormean) +  # derivative of prior
-                                    control$Usigma*sum(control$Ugamma*J*S/(1-S))  # Usigma is the Jacobian
+                                    control$Usigma*sum((-control$Usigma + control$Ugamma)*J*S/(1-S))  # Usigma is the Jacobian
             }
         }
         else{ #censoringtype=="interval" 
@@ -273,7 +273,7 @@ logPosterior_polygonal <- function(surv,X,beta,omega,eta,gamma,priors,cov.model,
                 }
 
                 dP_dlogUsigma <- (-1/control$logUsigma_priorsd^2)*(control$logUsigma-control$logUsigma_priormean) +  # derivative of prior
-                                    control$Usigma*sum((control$Ugamma*J2*S2-control$Ugamma*J1*S1)*1/(S1-S2)) # Usigma is the Jacobian 
+                                    control$Usigma*sum(((-control$Usigma + control$Ugamma)*J2*S2-(-control$Usigma + control$Ugamma)*J1*S1)*1/(S1-S2)) # Usigma is the Jacobian 
             }
         }
     
