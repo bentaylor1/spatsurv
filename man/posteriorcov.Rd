@@ -5,7 +5,7 @@
 \title{posteriorcov function}
 \usage{
 posteriorcov(x, probs = c(0.025, 0.5, 0.975), rmax = NULL, n = 100,
-  plot = TRUE, bw = FALSE, ...)
+  plot = TRUE, bw = FALSE, corr = FALSE, ...)
 }
 \arguments{
 \item{x}{an object of class mcmcspatsurv}
@@ -19,6 +19,8 @@ posteriorcov(x, probs = c(0.025, 0.5, 0.975), rmax = NULL, n = 100,
 \item{plot}{whether to plot the result}
 
 \item{bw}{Logical. Plot in black/white/greyscale? Default is to produce a colour plot. Useful for producing plots for journals that do not accept colour plots.}
+
+\item{corr}{logical whether to return the correlation function, default is FALSE i.e. returns the covariance function}
 
 \item{...}{other arguments to be passed to matplot function}
 }

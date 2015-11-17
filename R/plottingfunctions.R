@@ -208,15 +208,15 @@ spplot_compare <- function(x,y,what,what1=what,palette=brewer.pal(9,"Oranges"),l
 ##'
 ##' A function to 
 ##'
-##' @param poly X 
-##' @param type X 
+##' @param poly a spatial object that can be transformed and the extent obtained using the bbox function.
+##' @param type see ?openmap
 ##' @return ...
 ##' @export
 
 getBackground <- function(poly,type="stamen-toner"){
 	poly <- spTransform(poly,CRS("+init=epsg:4326"))
 	bb <- bbox(poly)
-	map <- openmap(upperLeft=c(lat=bb[2,2],lon=bb[1,1]), lowerRight=c(lat=bb[2,1],lon=bb[1,2]),type="stamen-toner")
+	map <- openmap(upperLeft=c(lat=bb[2,2],lon=bb[1,1]), lowerRight=c(lat=bb[2,1],lon=bb[1,2]),type=type)
 	return(map)
 }
 
