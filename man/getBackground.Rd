@@ -7,9 +7,9 @@
 getBackground(poly, type = "stamen-toner")
 }
 \arguments{
-\item{poly}{X}
+\item{poly}{a spatial object that can be transformed and the extent obtained using the bbox function.}
 
-\item{type}{X}
+\item{type}{see ?openmap}
 }
 \value{
 ...
