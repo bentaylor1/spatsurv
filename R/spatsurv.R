@@ -40,14 +40,14 @@
 ##' @importFrom OpenStreetMap openmap
 ##' @importFrom RColorBrewer brewer.pal 
 ##' @importFrom stringr str_count str_detect
-##' @importFrom Matrix Matrix sparseMatrix
+##' @importFrom Matrix Matrix sparseMatrix bdiag
 ##' @importFrom rgl abclines3d aspect3d axes3d planes3d points3d segments3d text3d title3d 
 ##' @importFrom fields image.plot  
 ##' @importFrom RandomFields CovarianceFct
 ##' @importFrom rgeos gBuffer
 ##' @importFrom iterators icount iter nextElem
 ##' @importFrom sp bbox proj4string<- proj4string SpatialPixelsDataFrame SpatialGridDataFrame Polygon Polygons SpatialPolygons coordinates CRS geometry GridTopology over proj4string SpatialGrid SpatialPixels SpatialPoints SpatialPolygonsDataFrame split spTransform 
-##' @importFrom spatstat rpoint progressreport
+##' @importFrom spatstat rpoint progressreport inside.owin
 ##' @importFrom survival Surv survfit
 ##' @importFrom geostatsp asImRaster
 ##' @importFrom raster crop brick raster

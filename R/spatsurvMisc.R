@@ -418,21 +418,36 @@ allocate <- function(poly,popden,survdat,pid,sid,n=2,wid=2000){
     nr <- length(poly)
     X <- matrix(NA,nrow(survdat),n)
     Y <- matrix(NA,nrow(survdat),n)
+    
     for(i in 1:nr){
         progressreport(i,nr)
         spol <- gBuffer(poly[i,],width=wid)
-        win <- as(poly[i,],"owin")
         den <- asImRaster(crop(popden,spol))
+        win <- as(poly[i,],"owin")
         idx <- survdat[,sid]==poly@data[i,pid]
         ns <- sum(idx)
         if(ns==0){
             next
         }
         else{
-            pts <- rpoint(ns*n,f=den,win=win)
+            test <- TRUE
+            pts <- c()
+            while(test){
+                ptstemp <- rpoint(ns*n,f=den,win=win)
+                tst <- inside.owin(ptstemp,w=win)
+                if(any(tst)){
+                    pts <- rbind(pts,cbind(ptstemp$x[tst],ptstemp$y[tst]))
+                }
+
+                if(nrow(pts)>=(ns*n)){
+                    pts <- pts[1:(ns*n),]
+                    test <- FALSE
+                }    
+            }
+            
             for(j in 1:n){              
-                X[which(idx),] <- matrix(pts$x,ns,n)
-                Y[which(idx),] <- matrix(pts$y,ns,n)
+                X[which(idx),] <- matrix(pts[,1],ns,n)
+                Y[which(idx),] <- matrix(pts[,2],ns,n)
             }
         }       
     }
