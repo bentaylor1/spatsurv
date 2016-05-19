@@ -55,7 +55,6 @@ QuadApprox <- function(fun,npts,argRanges,plot=FALSE,...){
     }
     cat("Done.\n")
     
-    
     if(plot){
         if(npar==1){
             plot(vals[[1]],dataf$funvals,main="Function")
@@ -373,13 +372,22 @@ proposalVariance_gridded <- function(X,surv,betahat,omegahat,Yhat,priors,cov.mod
     sigma[(lenbeta+1):(lenbeta+lenomega),(lenbeta+1):(lenbeta+lenomega)] <- hessian$hess_omega
     sigma[(lenbeta+1):(lenbeta+lenomega),(1:lenbeta)] <- hessian$hess_omega_beta
     sigma[(1:lenbeta),(lenbeta+1):(lenbeta+lenomega)] <- t(hessian$hess_omega_beta)       
+
+    #sigma[1:(lenbeta+lenomega),1:(lenbeta+lenomega)] <- as.matrix(nearPD(sigma[1:(lenbeta+lenomega),1:(lenbeta+lenomega)])$mat)
+    
     # gamma
     hess_gam <- hessian$hess_gamma 
     
     sigma <- (-1) * sigma # variance is inverse of observed information    
     
     matidx <- (lenbeta+lenomega+leneta+1):npars
-    matidx <- matrix(matidx,nrow=length(matidx),ncol=2) 
+    matidx <- matrix(matidx,nrow=length(matidx),ncol=2)
+
+    #browser()
+    #sigma[1:11,1:11] <- 0
+    #sigma[1:2,1:2] <- diag(1/1e-4,2)
+    #sigma[3:9,3:9] <- diag(1/1e-4,7)
+    #sigma[10:11,10:11] <- diag(1/1e-4,2)
 
     sigmaret <- Matrix(0,npars,npars)
     sigmaret[1:(lenbeta+lenomega+leneta),1:(lenbeta+lenomega+leneta)] <- solve(sigma)
@@ -598,7 +606,7 @@ estimateY <- function(X,betahat,omegahat,surv,control){
     
     haz <- setupHazard(dist=control$dist,pars=omega,grad=FALSE,hess=FALSE)    
     
-    tsubs <- guess_t(surv)   
+    tsubs <- guess_t(surv)  
     
     Y <- -X%*%betahat - log(haz$H(tsubs)) # greedy estimate of Y (maximise individual contributions to log-likelihood) ... note log(delta) is now omitted  
 

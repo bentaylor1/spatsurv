@@ -432,7 +432,7 @@ allocate <- function(poly,popden,survdat,pid,sid,n=2,wid=2000){
         else{
             test <- TRUE
             pts <- c()
-            while(test){
+            while(test){ # use rejection sampling to ensure all points are inside the observation window
                 ptstemp <- rpoint(ns*n,f=den,win=win)
                 tst <- inside.owin(ptstemp,w=win)
                 if(any(tst)){

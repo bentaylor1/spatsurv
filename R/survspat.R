@@ -12,6 +12,7 @@
 ##' @param shape when data is a data.frame, this can be a SpatialPolygonsDataFrame, or a SpatialPointsDataFrame, used to model spatial variation at the small region level. The regions are the polygons, or they represent the (possibly weighted) centroids of the polygons.
 ##' @param ids named list entry shpid character string giving name of variable in shape to be matched to variable dataid in data. dataid is the second entry of the named list.
 ##' @param control additional control parameters, see ?inference.control
+##' @param boundingbox optional bounding box over which to construct computational grid, supplied as an object on which the function 'bbox' returns the bounding box
 ##' @return an object inheriting class 'mcmcspatsurv' for which there exist methods for printing, summarising and making inference from.
 ##' @seealso \link{tpowHaz}, \link{exponentialHaz}, \link{gompertzHaz}, \link{makehamHaz}, \link{weibullHaz}, 
 ##' \link{covmodel}, link{ExponentialCovFct}, \code{SpikedExponentialCovFct},
@@ -31,7 +32,12 @@ survspat <- function(   formula,
                         priors,
                         shape=NULL,
                         ids=list(shpid=NULL,dataid=NULL),
-                        control=inference.control(gridded=FALSE)){
+                        control=inference.control(gridded=FALSE),
+                        boundingbox=NULL){
+
+    if(!is.null(boundingbox)){
+        boundingbox <- spTransform(boundingbox,CRS(proj4string(data)))
+    }
                         
     formula <- as.formula(formula)                    
     
@@ -53,7 +59,7 @@ survspat <- function(   formula,
 
     if(inherits(data,"SpatialPointsDataFrame")&!is.null(shape)){
         if(latentmode!="SPDE"){
-            warning("Non NULL shape, ignoring shape.",immediate.=TRUE)
+            warning("Non NULL shape with spatial points survival data, are you sure you want to proceed ???",immediate.=TRUE)
             Sys.sleep(2)
         }
     }
@@ -122,7 +128,7 @@ survspat <- function(   formula,
     gridobj <- NULL
    
     if(control$gridded){
-        gridobj <- FFTgrid(spatialdata=data,cellwidth=control$cellwidth,ext=control$ext)
+        gridobj <- FFTgrid(spatialdata=data,cellwidth=control$cellwidth,ext=control$ext,boundingbox=boundingbox)
     	del1 <- gridobj$del1
     	del2 <- gridobj$del2
     	Mext <- gridobj$Mext
@@ -375,6 +381,8 @@ survspat <- function(   formula,
     
     
     npars <- lenbeta + lenomega + leneta + lengamma
+
+    #SIGMA <- diag(1e-4,npars)
     
     SIGMA[1:(lenbeta+lenomega),1:(lenbeta+lenomega)] <- (1.65^2/((lenbeta+lenomega)^(1/3)))*SIGMA[1:(lenbeta+lenomega),1:(lenbeta+lenomega)]
     SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)] <- 0.4*(2.38^2/leneta)* SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)]
@@ -390,6 +398,11 @@ survspat <- function(   formula,
     diagidx <- matrix(diagidx,nrow=npars,ncol=2)
 
     SIGMApars <- as.matrix(SIGMA[1:(lenbeta+lenomega+leneta),1:(lenbeta+lenomega+leneta)])    
+    if(any(eigen(SIGMApars)$values<0)){
+        SIGMApars <- as.matrix(nearPD(SIGMApars)$mat)
+        warning("Fixing parameter proposal matrix ... maybe check model priors?",immediate.=TRUE)
+    }
+
     SIGMAparsINV <- solve(SIGMApars)
     cholSIGMApars <- t(chol(SIGMApars)) 
   
@@ -402,21 +415,25 @@ survspat <- function(   formula,
         Ugamma <- rep(0,nrow(X)) 
         control$Ugamma <- Ugamma 
 
-        SIGMAgamma <- control$split * SIGMA[diagidx][(lenbeta+lenomega+leneta+1):npars]
-        SIGMAgammaINV <- 1/SIGMAgamma
-        cholSIGMAgamma <- sqrt(SIGMAgamma)
+        #SIGMAgamma <- control$split * SIGMA[diagidx][(lenbeta+lenomega+leneta+1):npars]
+        #SIGMAgammaINV <- 1/SIGMAgamma
+        #cholSIGMAgamma <- sqrt(SIGMAgamma)
 
-        SIGMA_Ugamma <- mean((1-control$split) * SIGMA[diagidx][(lenbeta+lenomega+leneta+1):npars]) # proposal variance for Ugamma
+        #SIGMA_Ugamma <- mean((1-control$split) * SIGMA[diagidx][(lenbeta+lenomega+leneta+1):npars]) # proposal variance for Ugamma
+        SIGMA_Ugamma <- mean(SIGMA[diagidx][(lenbeta+lenomega+leneta+1):npars])
         SIGMA_UgammaINV <- 1/SIGMA_Ugamma
         cholSIGMA_Ugamma <- sqrt(SIGMA_Ugamma)
 
         etatemp <- cov.model$itrans(eta)
-        Usigma <- (1-control$split) * etatemp[control$sigmaidx] # initialise Usigma where U = Usigma * Ugamma
+        #Usigma <- (1-control$split) * etatemp[control$sigmaidx] # initialise Usigma where U = Usigma * Ugamma
+        #Usigma <- etatemp[control$sigmaidx]
+        Usigma <- exp(control$logUsigma_priormean)
         logUsigma <- log(Usigma)
-        etatemp[control$sigmaidx] <- control$split * etatemp[control$sigmaidx]
-        eta <- cov.model$trans(etatemp)
+        #etatemp[control$sigmaidx] <- control$split * etatemp[control$sigmaidx]
+        #eta <- cov.model$trans(etatemp)
 
-        SIGMA_logUsigma <- (1-control$split) * SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)][control$sigmaidx,control$sigmaidx]
+        #SIGMA_logUsigma <- (1-control$split) * SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)][control$sigmaidx,control$sigmaidx]
+        SIGMA_logUsigma <- SIGMA[(lenbeta+lenomega+1):(lenbeta+lenomega+leneta),(lenbeta+lenomega+1):(lenbeta+lenomega+leneta)][control$sigmaidx,control$sigmaidx]
         SIGMA_logUsigmaINV <- 1/SIGMA_logUsigma
         cholSIGMA_logUsigma <- sqrt(SIGMA_logUsigma)
 
@@ -583,6 +600,8 @@ survspat <- function(   formula,
             bad <- c(bad,iteration(mcmcloop))
             warning("An acceptance probability could not be calculated for this iteration, this is likely because the spatial decay parameter was too big for this choice of 'ext'. Either increase ext, or tighten prior on spatial decay parameter. At the end of the run check $bad to see which iterations this affected. Stop the run if this problem persists.",immediate.=TRUE)
         }
+
+        
 
         #if(iteration(mcmcloop)==2000){browser()}
         
