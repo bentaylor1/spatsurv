@@ -4,7 +4,7 @@
 ##' Langevin algorithm.
 ##'
 ##' @param formula the model formula in a format compatible with the function flexsurvreg from the flexsurv package 
-##' @param data a SpatialPointsDataFrame object containing the survival data as one of the columns
+##' @param data a SpatialPointsDataFrame object containing the survival data as one of the columns OR for polygonal data a data.frame, in which case, the argument shape must also be supplied
 ##' @param dist choice of distribution function for baseline hazard. Current options are: exponentialHaz, weibullHaz, gompertzHaz, makehamHaz, tpowHaz
 ##' @param cov.model an object of class covmodel, see ?covmodel ?ExponentialCovFct or ?SpikedExponentialCovFct
 ##' @param mcmc.control mcmc control parameters, see ?mcmcpars
@@ -52,6 +52,9 @@ survspat <- function(   formula,
     latentmode <- "points"
     if(inherits(data,"data.frame")){
         latentmode <- "polygons"
+        if(!is.null(control$imputation)){
+            latentmode <- "points"
+        }
     }
     if(inherits(cov.model,"SPDEmodel")){
         latentmode <- "SPDE"
@@ -74,7 +77,12 @@ survspat <- function(   formula,
 
     responsename <- as.character(formula[[2]])
     if(latentmode=="points"){
-        survivaldata <- data@data[[responsename]]
+        if(!is.null(control$imputation)){
+            survivaldata <- data@data[[responsename]]
+        }
+        else{
+            survivaldata <- data[[responsename]]
+        }
     }
     else{
         survivaldata <- data[[responsename]]

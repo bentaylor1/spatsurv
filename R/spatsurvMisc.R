@@ -208,6 +208,7 @@ plotsurv <- function(spp,ss,maxcex=1,transform=identity,background=NULL,eventpt=
 ##' @param gridded logical. Whether to perform compuation on a grid. Default is FALSE.
 ##' @param cellwidth the width of computational cells to use 
 ##' @param ext integer the number of times to extend the computational grid by in order to perform compuitation. The default is 2.
+##' @param imputation for polygonal data, an optional model for inference at the sub-polygonal level, see function imputationModel
 ##' @param optimcontrol a list of optional arguments to be passed to optim for non-spatial models
 ##' @param hessian whether to return a numerical hessian. Set this to TRUE for non-spatial models.
 ##' equal to the number of parameters of the baseline hazard
@@ -226,6 +227,7 @@ plotsurv <- function(spp,ss,maxcex=1,transform=identity,background=NULL,eventpt=
 inference.control <- function(  gridded=FALSE,
                                 cellwidth=NULL,
                                 ext=2,
+                                imputation=NULL,
                                 optimcontrol=NULL,
                                 hessian=FALSE,
                                 plotcal=FALSE,
@@ -239,6 +241,7 @@ inference.control <- function(  gridded=FALSE,
     ans$gridded <- gridded
     ans$cellwidth <- cellwidth 
     ans$ext <- ext 
+    ans$imputation <- imputation
     ans$optimcontrol <- optimcontrol
     ans$hessian <- hessian
     ans$plotcal <- plotcal

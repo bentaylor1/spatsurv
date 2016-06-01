@@ -77,11 +77,15 @@ baseHazST <- function(bh1 = NULL, survobj, t0, nbreaks = 5, breakmethod = "quant
         }
     
         retlist$dg_dgamma <- function(t){
-            return(matrix(tau, length(t), ng))
+            mm <- matrix(0,length(t), ng)
+            sapply(1:length(t),function(i){mm[i,idx[i]]<<-tau})
+            return(mm)
+            #return(matrix(tau, length(t), ng))
         }
     
         retlist$d2g_dtau_dgamma <- function(t){
-            return(lapply(1 : length(t), function(x){return(rep(1, ng))}))
+            return(lapply(1 : length(t), function(x){vv<-rep(0,ng);vv[idx[x]]<-1;return(vv)}))
+            #return(lapply(1 : length(t), function(x){return(rep(1, ng))}))
         }
     
         retlist$d2g_dtau2 <- function(t){
