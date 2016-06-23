@@ -60,7 +60,7 @@
 ## @import grDevices
 
 ##' @importFrom stats vcov as.formula acf coefficients deriv dexp dist dnorm end fft fitted formula Gamma integrate knots lm model.matrix optim optimise poly quantile rbinom rexp rnorm runif sd start update var residuals cov
-##' @importFrom graphics polygon hist legend lines matplot par plot points title abline
+##' @importFrom graphics boxplot polygon hist legend lines matplot par plot points title abline
 ##' @importFrom methods as
 ##' @importFrom utils txtProgressBar setTxtProgressBar browseURL flush.console
 ##' @importFrom grDevices adjustcolor 

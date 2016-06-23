@@ -5,9 +5,10 @@
 \title{inference.control function}
 \usage{
 inference.control(gridded = FALSE, cellwidth = NULL, ext = 2,
-  optimcontrol = NULL, hessian = FALSE, plotcal = FALSE,
-  timeonlyMCMC = FALSE, nugget = FALSE, savenugget = FALSE, split = 0.5,
-  logUsigma_priormean = 0, logUsigma_priorsd = 0.5)
+  imputation = NULL, optimcontrol = NULL, hessian = FALSE,
+  plotcal = FALSE, timeonlyMCMC = FALSE, nugget = FALSE,
+  savenugget = FALSE, split = 0.5, logUsigma_priormean = 0,
+  logUsigma_priorsd = 0.5)
 }
 \arguments{
 \item{gridded}{logical. Whether to perform compuation on a grid. Default is FALSE.}
@@ -15,6 +16,8 @@ inference.control(gridded = FALSE, cellwidth = NULL, ext = 2,
 \item{cellwidth}{the width of computational cells to use}
 
 \item{ext}{integer the number of times to extend the computational grid by in order to perform compuitation. The default is 2.}
+
+\item{imputation}{for polygonal data, an optional model for inference at the sub-polygonal level, see function imputationModel}
 
 \item{optimcontrol}{a list of optional arguments to be passed to optim for non-spatial models}
 

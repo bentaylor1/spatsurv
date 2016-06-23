@@ -62,6 +62,7 @@ baseHazST <- function(bh1 = NULL, survobj, t0, nbreaks = 5, breakmethod = "quant
     np <- npf + npg
   
     getg <- function(idx,pars){ # note that "idx" will be the same length as "t"
+        #browser()
         tau <- pars[1]
 
         gamma <- pars[3 : length(pars)]
@@ -78,13 +79,13 @@ baseHazST <- function(bh1 = NULL, survobj, t0, nbreaks = 5, breakmethod = "quant
     
         retlist$dg_dgamma <- function(t){
             mm <- matrix(0,length(t), ng)
-            sapply(1:length(t),function(i){mm[i,idx[i]]<<-tau})
+            sapply(1:length(t),function(i){mm[i,idx[i]] <<- tau})
             return(mm)
             #return(matrix(tau, length(t), ng))
         }
     
         retlist$d2g_dtau_dgamma <- function(t){
-            return(lapply(1 : length(t), function(x){vv<-rep(0,ng);vv[idx[x]]<-1;return(vv)}))
+            return(lapply(1 : length(t), function(x){vv<-rep(0,ng);vv[idx[x]] <- 1;return(vv)}))
             #return(lapply(1 : length(t), function(x){return(rep(1, ng))}))
         }
     
@@ -128,10 +129,14 @@ baseHazST <- function(bh1 = NULL, survobj, t0, nbreaks = 5, breakmethod = "quant
 
         if(is.null(MLinits)){
             retlist$MLinits <- rep(0, np)
+            retlist$MLinits[npf+2] <- -10
         }
         else{
             retlist$MLinits <- MLinits
         }
+
+        retlist$MLmethod <- "optifix"
+        retlist$MLfixpars <- c(rep(FALSE,npf+1),rep(TRUE,npg-1))
 
         return(retlist)
 
@@ -436,8 +441,40 @@ baseHazST <- function(bh1 = NULL, survobj, t0, nbreaks = 5, breakmethod = "quant
         
 }
       
+
+
+
+##' gamma2risk function
+##'
+##' A function to 
+##'
+##' @param mod X 
+##' @return ...
+##' @export
       
-      
+gamma2risk <- function(mod){
+    idx <- grep("gamma",colnames(mod$omegasamp))
+    tau <- mod$omegasamp[,"tau"]
+    gamma <- mod$omegasamp[,idx]
+    Y <- matrix(-tau^2/2,nrow=nrow(gamma),ncol=ncol(gamma)) + tau*gamma
+    return(exp(Y))
+}
+
+
+
+##' boxplotRisk function
+##'
+##' A function to 
+##'
+##' @param g2r X 
+##' @return ...
+##' @export
+
+
+boxplotRisk <- function(g2r){
+    d <- as.data.frame(cbind(g=as.vector(g2r),t=rep(1:ncol(g2r),each=nrow(g2r))))
+    boxplot(d$g~d$t)
+}     
       
       
       

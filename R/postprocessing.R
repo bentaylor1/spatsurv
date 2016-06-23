@@ -942,12 +942,19 @@ reconstruct.bs <- function(mod,...){
 ##' @export
 
 reconstruct.bs.mcmcspatsurv <- function(mod,varname,probs=c(0.025,0.975),bw=FALSE,xlab=NULL,ylab=NULL,plot=TRUE,...){
+    if(length(probs)!=2){
+        stop("length of probs must be 2")
+    }
+    probs1 <- sort(probs)
+    probs1 <- c(probs[1],0.5,probs[2])
     colidx <- str_detect(colnames(mod$X),paste("bs\\(",varname,"\\)",sep=""))
     bss <- mod$X[,colidx]
     idx <- which(colidx)
-    fit <- colSums(summary(mod)[idx,1]*t(bss))
+    #fit <- colSums(summary(mod)[idx,1]*t(bss))
     fitall <- t(apply(mod$betasamp[,idx],1,function(x){colSums(x*t(bss))}))
-    ul <- apply(fitall,2,quantile,probs=probs)
+    ul <- apply(fitall,2,quantile,probs=probs1)
+    fit <- ul[2,]
+    ul <- ul[-2,]
     xx <- mod$data[,varname]
 
     ord <- order(xx)

@@ -11,7 +11,7 @@ survspat(formula, data, dist, cov.model, mcmc.control, priors, shape = NULL,
 \arguments{
 \item{formula}{the model formula in a format compatible with the function flexsurvreg from the flexsurv package}
 
-\item{data}{a SpatialPointsDataFrame object containing the survival data as one of the columns}
+\item{data}{a SpatialPointsDataFrame object containing the survival data as one of the columns OR for polygonal data a data.frame, in which case, the argument shape must also be supplied}
 
 \item{dist}{choice of distribution function for baseline hazard. Current options are: exponentialHaz, weibullHaz, gompertzHaz, makehamHaz, tpowHaz}
 
