@@ -51,6 +51,7 @@
 ##' @importFrom survival Surv survfit
 ##' @importFrom geostatsp asImRaster
 ##' @importFrom raster crop brick raster
+##' @import lubridate
 
 
 ## @import stats
